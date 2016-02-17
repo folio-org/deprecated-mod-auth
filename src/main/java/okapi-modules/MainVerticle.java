@@ -10,6 +10,10 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
+
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
+
 public class MainVerticle extends AbstractVerticle {
 
   private final String signingSecret = "all_zombies_must_dance";
@@ -32,15 +36,29 @@ public class MainVerticle extends AbstractVerticle {
 
     router.post("/token").handler(BodyHandler.create()); //Allow us to read the POST data
     router.post("/token").handler(this::handleCreateToken);
-    router.get("/*").handler(this::handleAuth);
+    router.route("/*").handler(this::handleAuth);
     router.get("/test").handler(this::handleTest);
     
     HttpServer server = vertx.createHttpServer();
-    server.requestHandler(router::accept).listen(8081);  
+    final int port = Integer.parseInt(System.getProperty("port", "8081"));
+    server.requestHandler(router::accept).listen(port);  
   }
 
   private void handleAuth(RoutingContext ctx) {
-    String authToken = ctx.request().headers().get("X-Okapi-Authorization");
+    String authHeader = ctx.request().headers().get("Authorization");
+    Pattern pattern = null;
+    Matcher matcher = null;
+    String authToken = null;
+    if(authHeader != null) {
+      pattern = Pattern.compile("Bearer\\s+(.+)");
+      matcher = pattern.matcher(authHeader);
+      if(matcher.find() && matcher.groupCount() > 0) { authToken = matcher.group(1); }
+    }
+    if(authToken == null) {
+      ctx.response().setStatusCode(400);
+      ctx.response().end("No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
+      return;
+    }
     JsonObject authInfo = new JsonObject().put("jwt", authToken);
     jwtAuth.authenticate(authInfo, result -> {
       if(!result.succeeded()) {
@@ -51,7 +69,7 @@ public class MainVerticle extends AbstractVerticle {
       } else {
         //Assuming that all is well, switch to chunked and return the content
         ctx.response().setChunked(true);
-        ctx.response().setStatusCode(200);
+        ctx.response().setStatusCode(202);
         //Assign a handler that simply writes back the data
         ctx.request().handler( data -> {
           System.out.println("Writing data to response");
@@ -85,14 +103,17 @@ public class MainVerticle extends AbstractVerticle {
     if(!authUtil.verifyLogin(json.getString("username"), json.getString("password"))) {
         ctx.response().setStatusCode(400);
         ctx.response().end("Invalid credentials");
+        return;
     }
     ctx.response().setStatusCode(200);
     String token = jwtAuth.generateToken(
         new JsonObject().put("username", json.getString("username")),
         new JWTOptions().setExpiresInSeconds(expires)
     );
-    ctx.response().putHeader("Content-Type", "text/plain");
-    ctx.response().end(token);
+    //ctx.response().putHeader("Content-Type", "text/plain");
+    ctx.response().putHeader("Authorization", "Bearer " + token);
+    ctx.response().end(postContent);
+    //ctx.response().end(token);
   }
 
   private void handleTest(RoutingContext ctx) {
