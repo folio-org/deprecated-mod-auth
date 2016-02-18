@@ -11,11 +11,12 @@ import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
 
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-
 public class MainVerticle extends AbstractVerticle {
 
+  /*
+   * TODO: Find a better way to assign the signing secret. Perhaps in
+   * a properties file or some other external configuration option.
+   */
   private final String signingSecret = "all_zombies_must_dance";
   private AuthUtil authUtil = new AuthUtil();
   private JWTAuth jwtAuth = null;
@@ -25,7 +26,7 @@ public class MainVerticle extends AbstractVerticle {
   
     JsonObject jwtAuthConfig = new JsonObject()
       .put("keyStore", new JsonObject()
-          .put("path", "keystore.jceks")
+          .put("path", "keystore.jceks") //this resolves releative to our resources/ dir
           .put("type", "jceks")
           .put("password", signingSecret)
       );
@@ -37,23 +38,30 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/token").handler(BodyHandler.create()); //Allow us to read the POST data
     router.post("/token").handler(this::handleCreateToken);
     router.route("/*").handler(this::handleAuth);
-    router.get("/test").handler(this::handleTest);
     
     HttpServer server = vertx.createHttpServer();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
-    server.requestHandler(router::accept).listen(port);  
+    server.requestHandler(router::accept).listen(port, result -> {
+        if(result.succeeded()) {
+          fut.complete();
+        } else {
+          fut.fail(result.cause());
+        }
+    });  
   }
 
+  /*
+   * The handler to actually check that a JWT token is valid. If it is,
+   * return a status of 202 and write the request content (if any)
+   * back to the response
+   *
+   * It is possible that we could do some of this with vert.x's built-in
+   * JWT Auth handler, but we need to make sure it can return data
+   * in the method required by Okapi
+   */
   private void handleAuth(RoutingContext ctx) {
     String authHeader = ctx.request().headers().get("Authorization");
-    Pattern pattern = null;
-    Matcher matcher = null;
-    String authToken = null;
-    if(authHeader != null) {
-      pattern = Pattern.compile("Bearer\\s+(.+)");
-      matcher = pattern.matcher(authHeader);
-      if(matcher.find() && matcher.groupCount() > 0) { authToken = matcher.group(1); }
-    }
+    String authToken = authUtil.extractToken(authHeader);
     if(authToken == null) {
       ctx.response().setStatusCode(400);
       ctx.response().end("No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
@@ -84,7 +92,16 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
 
-  
+  /*
+   * The handler for our POST request that actually gets a new JWT. Takes
+   * JSON with the fields 'username' and 'password' and asks for verification
+   * against the AuthUtil::verifyLogin() method. If verification is successful
+   * we generate a token and return it in the Authorization: Bearer <token>
+   * header format.
+   *
+   * We write the post content back to the response. This seems to be necessary
+   * for proper operation with Okapi
+   */
   private void handleCreateToken(RoutingContext ctx) {
     final String postContent = ctx.getBodyAsString();
     JsonObject json = null;
@@ -110,22 +127,8 @@ public class MainVerticle extends AbstractVerticle {
         new JsonObject().put("username", json.getString("username")),
         new JWTOptions().setExpiresInSeconds(expires)
     );
-    //ctx.response().putHeader("Content-Type", "text/plain");
     ctx.response().putHeader("Authorization", "Bearer " + token);
     ctx.response().end(postContent);
-    //ctx.response().end(token);
   }
-
-  private void handleTest(RoutingContext ctx) {
-    ctx.response().setStatusCode(200);
-    ctx.response().putHeader("Content-Type", "text/plain");
-    ctx.response().end("You have passed the test.");
-  }
-
-/*
-  private void handleValidate(RoutingContext ctx) {
-  }
-*/
-
 }
 
