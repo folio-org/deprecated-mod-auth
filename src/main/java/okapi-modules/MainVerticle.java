@@ -19,6 +19,7 @@ public class MainVerticle extends AbstractVerticle {
    */
   private final String signingSecret = "all_zombies_must_dance";
   private AuthUtil authUtil = new AuthUtil();
+  private AuthProvider authProvider = new DummyAuthProvider();
   private JWTAuth jwtAuth = null;
   private Long expires = 60L;
   @Override
@@ -117,7 +118,7 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().end("POST must be in JSON format and contain fields for both username and password");
       return;
     }
-    if(!authUtil.verifyLogin(json.getString("username"), json.getString("password"))) {
+    if(!authProvider.verifyLogin(json).getSuccess()) {
         ctx.response().setStatusCode(400);
         ctx.response().end("Invalid credentials");
         return;

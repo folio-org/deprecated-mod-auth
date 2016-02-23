@@ -5,17 +5,10 @@ import java.util.regex.Matcher;
 
 
 public class AuthUtil {
-  /*
-   * Authentication stub method. At some point, this needs to become
-   * a lot more complex, as it could potentially need to handle
-   * several auth backends. Also need to consider how it might pass
-   * relevent information back (e.g. SAML token) for inclusion into
-   * the JWT
-   */
-  public boolean verifyLogin(String username, String password) {
-    return true; //EVERY LOGIN IS VALID. OMG.
-  }
 
+  /*
+   * Utility method to pull the Bearer token out of a header
+   */
   public String extractToken(String authorizationHeader) {
     Pattern pattern = null;
     Matcher matcher = null;
