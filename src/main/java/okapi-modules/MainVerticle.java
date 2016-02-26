@@ -157,6 +157,10 @@ public class MainVerticle extends AbstractVerticle {
         .end("No valid JWT token found.");
       return;
     }
+    /*
+     * TODO: Add some way to check if we have a 'superuser'
+     * token to permit expiring of a non-possessed token
+     */
     if(tokenStore.hasToken(authToken, "expired")) {
         ctx.response().setStatusCode(400);
         ctx.response().end("Token is already expired");
@@ -174,6 +178,13 @@ public class MainVerticle extends AbstractVerticle {
         ctx.response().end("POST JSON must contain the field 'token'");
         return;
     }
+    if(!authToken.equals(json.getString("token"))) {
+      ctx.response()
+        .setStatusCode(400)
+        .end("Token to expire does not match actual token");
+      return;
+    }
+    final String expireToken = json.getString("token");
     jwtAuth.authenticate(
         new JsonObject().put("jwt", authToken),
         result -> {
@@ -186,7 +197,7 @@ public class MainVerticle extends AbstractVerticle {
               .setStatusCode(200)
               .putHeader("Authorization", "Bearer " + authToken)
               .end(postContent);
-            tokenStore.addToken(authToken, "expired");
+            tokenStore.addToken(expireToken, "expired");
           }
         }
     );
