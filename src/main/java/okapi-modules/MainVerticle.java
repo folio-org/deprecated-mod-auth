@@ -22,6 +22,7 @@ public class MainVerticle extends AbstractVerticle {
   private AuthProvider authProvider = new DummyAuthProvider();
   private JWTAuth jwtAuth = null;
   private Long expires = 60L;
+  private TokenStore tokenStore = new DummyTokenStore();
   @Override
   public void start(Future<Void> fut) {
   
@@ -33,11 +34,13 @@ public class MainVerticle extends AbstractVerticle {
       );
 
     jwtAuth = JWTAuth.create(vertx, jwtAuthConfig);
-
+    tokenStore.addStore("expired");
     Router router = Router.router(vertx);
 
     router.post("/token").handler(BodyHandler.create()); //Allow us to read the POST data
     router.post("/token").handler(this::handleCreateToken);
+    router.post("/expire").handler(BodyHandler.create());
+    router.post("/expire").handler(this::handleExpireToken);
     router.route("/*").handler(this::handleAuth);
     
     HttpServer server = vertx.createHttpServer();
@@ -67,6 +70,12 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().setStatusCode(400);
       ctx.response().end("No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
       return;
+    }
+    // Is the token in our listing of expired tokens? 
+    if(tokenStore.hasToken(authToken, "expired")) {
+        ctx.response()
+          .setStatusCode(400)
+          .end("Token is expired");
     }
     JsonObject authInfo = new JsonObject().put("jwt", authToken);
     jwtAuth.authenticate(authInfo, result -> {
@@ -131,5 +140,55 @@ public class MainVerticle extends AbstractVerticle {
     ctx.response().putHeader("Authorization", "Bearer " + token);
     ctx.response().end(postContent);
   }
-}
 
+  /*
+   * Take a POSTed token to expire. Instead of plucking the token
+   * directly from the header, we'll use one specified in the POST
+   * data, in order to allow for a privileged 'admin' user with a
+   * non-matching token to expire a different token 
+   * */
+  private void handleExpireToken(RoutingContext ctx) {
+    final String postContent = ctx.getBodyAsString();
+    JsonObject json = null;
+    String authToken = authUtil.extractToken(ctx.request().headers().get("Authorization"));
+    if(authToken == null) {
+      ctx.response()
+        .setStatusCode(400)
+        .end("No valid JWT token found.");
+      return;
+    }
+    if(tokenStore.hasToken(authToken, "expired")) {
+        ctx.response().setStatusCode(400);
+        ctx.response().end("Token is already expired");
+        return;
+    }
+    try {
+      json = new JsonObject(postContent);
+    } catch(DecodeException dex) {
+      ctx.response().setStatusCode(400);
+      ctx.response().end("Unable to decode '" + postContent + "' as valid JSON");
+      return;
+    }
+    if(!json.containsKey("token")) {
+        ctx.response().setStatusCode(400);
+        ctx.response().end("POST JSON must contain the field 'token'");
+        return;
+    }
+    jwtAuth.authenticate(
+        new JsonObject().put("jwt", authToken),
+        result -> {
+          if(!result.succeeded()) {
+            ctx.response()
+              .setStatusCode(400)
+              .end("Denied");
+          } else {
+            ctx.response()
+              .setStatusCode(200)
+              .putHeader("Authorization", "Bearer " + authToken)
+              .end(postContent);
+            tokenStore.addToken(authToken, "expired");
+          }
+        }
+    );
+  }
+}
