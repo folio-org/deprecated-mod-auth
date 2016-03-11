@@ -1,5 +1,6 @@
 package com.indexdata.okapi_modules;
 
+import com.indexdata.okapi_modules.impl.FlatFileAuthProvider;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.ext.web.Router;
@@ -7,9 +8,13 @@ import io.vertx.ext.web.RoutingContext;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.DecodeException;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.handler.BodyHandler;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
+import java.nio.file.Paths;
+
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -18,17 +23,32 @@ public class MainVerticle extends AbstractVerticle {
    * a properties file or some other external configuration option.
    */
   private final String signingSecret = "all_zombies_must_dance";
-  private AuthUtil authUtil = new AuthUtil();
-  private AuthProvider authProvider = new DummyAuthProvider();
+  private final AuthUtil authUtil = new AuthUtil();
+  private AuthProvider authProvider;
   private JWTAuth jwtAuth = null;
-  private Long expires = 60L;
-  private TokenStore tokenStore = new DummyTokenStore();
+  private final Long expires = 60L;
+  private final TokenStore tokenStore = new DummyTokenStore();
+  private final Logger logger = LoggerFactory.getLogger("auth_module");
   @Override
   public void start(Future<Void> fut) {
   
+    String authProviderChoice = System.getProperty("authType", "dummy");
+    if(authProviderChoice.equals("flatfile")) {
+      String authSecretsProp = System.getProperty("secretsFilepath", "authSecrets.txt");
+      String authSecretsPath;
+      if(Paths.get(authSecretsProp).isAbsolute()) {
+        authSecretsPath = authSecretsProp;
+      } else {
+        authSecretsPath = this.getClass().getClassLoader().getResource(authSecretsProp).getFile();
+      }
+      logger.debug("Using '" + authSecretsPath + "' for user secrets");
+      authProvider = new FlatFileAuthProvider(authSecretsPath);
+    } else {
+      authProvider = new DummyAuthProvider();
+    }
     JsonObject jwtAuthConfig = new JsonObject()
       .put("keyStore", new JsonObject()
-          .put("path", "keystore.jceks") //this resolves releative to our resources/ dir
+          .put("path", "keystore.jceks") //this resolves relative to our resources/ dir
           .put("type", "jceks")
           .put("password", signingSecret)
       );
@@ -76,26 +96,25 @@ public class MainVerticle extends AbstractVerticle {
         ctx.response()
           .setStatusCode(400)
           .end("Token is expired");
+        return;
     }
     JsonObject authInfo = new JsonObject().put("jwt", authToken);
     jwtAuth.authenticate(authInfo, result -> {
       if(!result.succeeded()) {
-        System.out.println("Did not succeed");
+        logger.debug("JWT auth did not succeed");
         ctx.response().setStatusCode(400);
         ctx.response().end("Denied");
-      
+        return;
       } else {
         //Assuming that all is well, switch to chunked and return the content
         ctx.response().setChunked(true);
         ctx.response().setStatusCode(202);
         //Assign a handler that simply writes back the data
         ctx.request().handler( data -> {
-          System.out.println("Writing data to response");
           ctx.response().write(data);
         });
       //Assign an end handler that closes the request
         ctx.request().endHandler( data -> {
-          System.out.println("Closing response");
           ctx.response().end();
         });
       }

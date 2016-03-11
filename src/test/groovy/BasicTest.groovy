@@ -20,6 +20,9 @@ class BasicTest {
 
   @Before
   void setUp(TestContext context) {
+    java.lang.System.setProperty("authType", "flatfile")
+    //java.lang.System.setProperty("secretsFilepath", "/tmp/authSecrets.txt")
+    java.lang.System.setProperty("loglevel", "debug")
     vertx = Vertx.vertx()
     vertx.deployVerticle(MainVerticle.class.getName(), context.asyncAssertSuccess())
     httpClient = new HTTPBuilder("http://localhost:8081")
@@ -43,8 +46,8 @@ class BasicTest {
     httpClient.request( Method.POST, ContentType.JSON ) { req ->
       uri.path = '/token'
       body = [
-        username : 'Joe',
-        password : 'Schmoe'
+        username : 'erikthered',
+        password : 'ChickenMonkeyDuck'
       ]
 
       response.success = { resp, json ->
@@ -53,7 +56,7 @@ class BasicTest {
       }
 
       response.failure = { resp ->
-        println "Failure: ${resp.statusLine}"
+        println "Failure to authenticate for token: ${resp.statusLine}"
         context.fail(resp.statusLine.toString())
       }
     }
