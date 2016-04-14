@@ -3,7 +3,7 @@
 # To build:
 #  docker build -t indexdata/okapi-sample-module .
 # To run:
-#   docker run -t -i -p 8080:8080 indexdata/okapi-sample-module
+#   docker run -t -i -p 8080:8081 indexdata/okapi-sample-module
 ###
 
 FROM java:8
