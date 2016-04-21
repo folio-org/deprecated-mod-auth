@@ -1,6 +1,7 @@
 package com.indexdata.okapi_modules;
 
-import com.indexdata.okapi_modules.impl.FlatFileAuthProvider;
+import com.indexdata.okapi_modules.impl.DummyAuthStore;
+import com.indexdata.okapi_modules.impl.FlatFileAuthStore;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.ext.web.Router;
@@ -24,7 +25,7 @@ public class MainVerticle extends AbstractVerticle {
    */
   private final String signingSecret = "all_zombies_must_dance";
   private final AuthUtil authUtil = new AuthUtil();
-  private AuthProvider authProvider;
+  private AuthStore authProvider;
   private JWTAuth jwtAuth = null;
   private final Long expires = 60L;
   private final TokenStore tokenStore = new DummyTokenStore();
@@ -42,9 +43,9 @@ public class MainVerticle extends AbstractVerticle {
         authSecretsPath = this.getClass().getClassLoader().getResource(authSecretsProp).getFile();
       }
       logger.debug("Using '" + authSecretsPath + "' for user secrets");
-      authProvider = new FlatFileAuthProvider(authSecretsPath);
+      authProvider = new FlatFileAuthStore(authSecretsPath);
     } else {
-      authProvider = new DummyAuthProvider();
+      authProvider = new DummyAuthStore();
     }
     JsonObject jwtAuthConfig = new JsonObject()
       .put("keyStore", new JsonObject()
