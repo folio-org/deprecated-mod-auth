@@ -25,7 +25,7 @@ public class MainVerticle extends AbstractVerticle {
    */
   private final String signingSecret = "all_zombies_must_dance";
   private final AuthUtil authUtil = new AuthUtil();
-  private AuthStore authProvider;
+  private AuthStore authStore;
   private JWTAuth jwtAuth = null;
   private final Long expires = 60L;
   private final TokenStore tokenStore = new DummyTokenStore();
@@ -33,8 +33,8 @@ public class MainVerticle extends AbstractVerticle {
   @Override
   public void start(Future<Void> fut) {
   
-    String authProviderChoice = System.getProperty("authType", "dummy");
-    if(authProviderChoice.equals("flatfile")) {
+    String authStoreChoice = System.getProperty("authType", "dummy");
+    if(authStoreChoice.equals("flatfile")) {
       String authSecretsProp = System.getProperty("secretsFilepath", "authSecrets.txt");
       String authSecretsPath;
       if(Paths.get(authSecretsProp).isAbsolute()) {
@@ -43,9 +43,9 @@ public class MainVerticle extends AbstractVerticle {
         authSecretsPath = this.getClass().getClassLoader().getResource(authSecretsProp).getFile();
       }
       logger.debug("Using '" + authSecretsPath + "' for user secrets");
-      authProvider = new FlatFileAuthStore(authSecretsPath);
+      authStore = new FlatFileAuthStore(authSecretsPath);
     } else {
-      authProvider = new DummyAuthStore();
+      authStore = new DummyAuthStore();
     }
     JsonObject jwtAuthConfig = new JsonObject()
       .put("keyStore", new JsonObject()
@@ -107,6 +107,12 @@ public class MainVerticle extends AbstractVerticle {
         ctx.response().end("Denied");
         return;
       } else {
+        String username = authUtil.getClaims(authToken).getString("sub");
+        JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
+        //If we have a list of permissions stored for this username, assign them as a header
+        if(metadata != null && metadata.getJsonArray("permissions") != null) {
+          ctx.response().putHeader("X-Okapi-Permissions", metadata.getJsonArray("permissions").encode());
+        }
         //Assuming that all is well, switch to chunked and return the content
         ctx.response().setChunked(true);
         ctx.response().setStatusCode(202);
@@ -147,7 +153,7 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().end("POST must be in JSON format and contain fields for both username and password");
       return;
     }
-    if(!authProvider.verifyLogin(json).getSuccess()) {
+    if(!authStore.verifyLogin(json).getSuccess()) {
         ctx.response().setStatusCode(400);
         ctx.response().end("Invalid credentials");
         return;

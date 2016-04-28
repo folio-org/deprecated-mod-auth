@@ -1,5 +1,7 @@
 package com.indexdata.okapi_modules;
 
+import com.sun.xml.internal.messaging.saaj.util.Base64;
+import io.vertx.core.json.JsonObject;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -46,6 +48,12 @@ public class AuthUtil {
     byte bytes[] = new byte[20];
     random.nextBytes(bytes);
     return new String(bytes);
+  }
+  
+  public JsonObject getClaims(String jwt) {
+    String encodedJson = jwt.split("\\.")[1];
+    String decodedJson = Base64.base64Decode(encodedJson);
+    return new JsonObject(decodedJson);    
   }
 
 }

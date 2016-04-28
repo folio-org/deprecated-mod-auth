@@ -40,6 +40,7 @@ public class FlatFileAuthStore implements AuthStore {
   final private String algorithm = "PBKDF2WithHmacSHA1";
   final private AuthUtil authUtil = new AuthUtil();
   private ReentrantLock fileLock = new ReentrantLock();
+  private JsonArray users = null;
 
   public FlatFileAuthStore(String secretsFilepath) {
     this.secretsFilepath = secretsFilepath;
@@ -51,23 +52,30 @@ public class FlatFileAuthStore implements AuthStore {
   Clearly do not want to use this for more than a few users.
   Use salt and provided password to generate new hash. Check for match.
   */
-  private CheckResult checkPassword(String username, String password){
-    JsonArray users = this.deserializeFile();
-    for(Object ob : users) {
-      JsonObject jOb = (JsonObject)ob;
-      if(!jOb.getString("name").equals(username)) {
-        continue;
+  private CheckResult checkPassword(String username, String password) {
+    fileLock.lock();
+    try {
+      if(users == null) {
+        deserializeFile();
       }
-      String storedHash = jOb.getString("hash");
-      String storedSalt = jOb.getString("salt");
-      if(!calculateHash(password, storedSalt).equals(storedHash)) {
-        return new CheckResult(false, true, null);
-      }
-      return new CheckResult(true, true, jOb.getJsonObject("metadata"));
-     }
-    return new CheckResult(false, false, null);
+      for(Object ob : users) {
+        JsonObject jOb = (JsonObject)ob;
+        if(!jOb.getString("name").equals(username)) {
+          continue;
+        }
+        String storedHash = jOb.getString("hash");
+        String storedSalt = jOb.getString("salt");
+        if(!calculateHash(password, storedSalt).equals(storedHash)) {
+          return new CheckResult(false, true, null);
+        }
+        return new CheckResult(true, true, jOb.getJsonObject("metadata"));
+       }
+      return new CheckResult(false, false, null);
+    } finally {
+      fileLock.unlock();
+    }
   }
-  
+ /* 
   private JsonArray deserializeFile() {
     JsonArray users = null;
     fileLock.lock();
@@ -83,91 +91,141 @@ public class FlatFileAuthStore implements AuthStore {
     }
     return users;
   }
+  */
   
-private void serializeFile(JsonArray users) {
-  String userdata = users.encode();
-  fileLock.lock();
-  try {
+  private void deserializeFile() {
     try {
-      PrintWriter printWriter = new PrintWriter(secretsFilepath);
-      printWriter.write(userdata);
-      printWriter.close();
+      String userdata = new String(Files.readAllBytes(Paths.get(secretsFilepath)));
+      this.users = new JsonArray(userdata);      
+    } catch(IOException e) {
+      throw new RuntimeException(e);
+    } 
+  }
+  
+  private void serializeFile() {
+    String userdata = this.users.encode();
+    try {
+        PrintWriter printWriter = new PrintWriter(secretsFilepath);
+        printWriter.write(userdata);
+        printWriter.close();
     } catch(IOException e) {
       throw new RuntimeException(e);
     }
-  } finally {
-    fileLock.unlock();
   }
-}
 
-private String calculateHash(String password, String salt) {
-  return authUtil.calculateHash(password, salt, algorithm, iterations, keyLength);
-}
-
-@Override
-public AuthResult verifyLogin(JsonObject credentials) {
-  CheckResult checkResult = checkPassword(credentials.getString("username"), credentials.getString("password"));
-  AuthResult authResult = new AuthResult(checkResult.isSuccess());
-  authResult.setMetadata(checkResult.getMetadata());
-  return authResult;
-}
-
-@Override
-public boolean updateLogin(JsonObject credentials, JsonObject metadata) {
-  JsonArray users = this.deserializeFile();
-  for(Object ob : users) {
-    JsonObject jOb = (JsonObject)ob;
-    if(!jOb.getString("username").equals(credentials.getString("username"))) {
-      continue;
-    }
-    jOb.put("username",credentials.getString("username"));
-    String newSalt = authUtil.getSalt();
-    String newHash = this.calculateHash(credentials.getString("password"), newSalt);
-    jOb.put("salt", newSalt);
-    jOb.put("hash", newHash);
-    if(metadata != null) {
-      jOb.put("metadata", metadata);
-    }
-    this.serializeFile(users);
-    return true;
+  private String calculateHash(String password, String salt) {
+    return authUtil.calculateHash(password, salt, algorithm, iterations, keyLength);
   }
-  return false;
-}
 
-@Override
-public boolean removeLogin(JsonObject credentials) {
-  JsonArray users = this.deserializeFile();
-  for(Object ob : users) {
-    JsonObject jOb = (JsonObject)ob;
-    if(!jOb.getString("username").equals(credentials.getString("username"))) {
-      continue;
-    }
-    users.remove(jOb);
-    this.serializeFile(users);
-    return true;
+  @Override
+  public AuthResult verifyLogin(JsonObject credentials) {
+    /*
+    TODO: Implement caching
+    */
+    CheckResult checkResult = checkPassword(credentials.getString("username"), credentials.getString("password"));
+    AuthResult authResult = new AuthResult(checkResult.isSuccess());
+    authResult.setMetadata(checkResult.getMetadata());
+    return authResult;
   }
-  return false;
-}
 
-@Override
-public boolean addLogin(JsonObject credentials, JsonObject metadata) {
-  JsonArray users = this.deserializeFile();
-  for(Object ob : users) {
-    JsonObject jOb = (JsonObject)ob;
-    if(jOb.getString("username").equals(credentials.getString("username"))) {
-      return false; //Name already exists
+  @Override
+  public boolean updateLogin(JsonObject credentials, JsonObject metadata) {
+    fileLock.lock();
+    try {
+      if(users == null) {
+        deserializeFile();
+      }
+      for(Object ob : users) {
+        JsonObject jOb = (JsonObject)ob;
+        if(!jOb.getString("username").equals(credentials.getString("username"))) {
+          continue;
+        }
+        jOb.put("username",credentials.getString("username"));
+        String newSalt = authUtil.getSalt();
+        String newHash = this.calculateHash(credentials.getString("password"), newSalt);
+        jOb.put("salt", newSalt);
+        jOb.put("hash", newHash);
+        if(metadata != null) {
+          jOb.put("metadata", metadata);
+        }
+        serializeFile();
+        return true;
+      }
+    } finally {
+      fileLock.unlock();
+    }
+    return false;
+  }
+
+  @Override
+  public boolean removeLogin(JsonObject credentials) {
+    fileLock.lock();
+    try {
+      if(users == null) {
+        deserializeFile();
+      }
+      for(Object ob : users) {
+        JsonObject jOb = (JsonObject)ob;
+        if(!jOb.getString("username").equals(credentials.getString("username"))) {
+          continue;
+        }
+        users.remove(jOb);
+        serializeFile();
+        return true;
+      }
+      return false;
+    } finally {
+      fileLock.unlock();
     }
   }
-  String salt = authUtil.getSalt();
-  String hash = this.calculateHash(credentials.getString("password"), salt);
-  JsonObject newUser = new JsonObject();
-  newUser.put("username", credentials.getString("username"));
-  newUser.put("salt", salt);
-  newUser.put("hash", hash);
-  newUser.put("metadata", metadata);
-  this.serializeFile(users);
-  return true;
-}
+
+  @Override
+  public boolean addLogin(JsonObject credentials, JsonObject metadata) {
+    fileLock.lock();
+    try {
+      if(users == null) {
+        deserializeFile();
+      }
+      for(Object ob : users) {
+        JsonObject jOb = (JsonObject)ob;
+        if(jOb.getString("username").equals(credentials.getString("username"))) {
+          return false; //Name already exists
+        }
+      }
+      String salt = authUtil.getSalt();
+      String hash = this.calculateHash(credentials.getString("password"), salt);
+      JsonObject newUser = new JsonObject();
+      newUser.put("username", credentials.getString("username"));
+      newUser.put("salt", salt);
+      newUser.put("hash", hash);
+      newUser.put("metadata", metadata);
+      serializeFile();
+      return true;
+    } finally {
+      fileLock.unlock();
+    }
+  }
+
+  @Override
+  public JsonObject getMetadata(JsonObject credentials) {
+    fileLock.lock();
+    try {
+      if(users == null) {
+        deserializeFile();
+      }
+      for(Object ob : users) {
+        JsonObject jOb = (JsonObject)ob;
+        if(!jOb.getString("username").equals(credentials.getString("username"))) {
+          continue;
+        }
+        return jOb.getJsonObject("metadata");
+      }
+      return null;
+    } finally {
+      fileLock.unlock();
+    }
+  }
+  
 
   private static class CheckResult {
 

@@ -25,4 +25,9 @@ public class DummyAuthStore implements AuthStore {
   public boolean addLogin(JsonObject credentials, JsonObject metadata) {
     return true;
   }
+
+  @Override
+  public JsonObject getMetadata(JsonObject credentials) {
+    return null;
+  }
 }

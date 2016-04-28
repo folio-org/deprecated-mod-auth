@@ -7,5 +7,6 @@ public interface AuthStore {
     public boolean updateLogin(JsonObject credentials, JsonObject metadata);
     public boolean removeLogin(JsonObject credentials);
     public boolean addLogin(JsonObject credentials, JsonObject metadata);
+    public JsonObject getMetadata(JsonObject credentials);
 
 }
