@@ -199,6 +199,7 @@ public class FlatFileAuthStore implements AuthStore {
       newUser.put("salt", salt);
       newUser.put("hash", hash);
       newUser.put("metadata", metadata);
+      users.add(newUser);
       serializeFile();
       return true;
     } finally {

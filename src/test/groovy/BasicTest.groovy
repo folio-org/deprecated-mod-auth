@@ -10,6 +10,9 @@ import io.vertx.ext.unit.TestContext
 import groovyx.net.http.HTTPBuilder
 import groovyx.net.http.Method
 import groovyx.net.http.ContentType
+import java.lang.Thread
+import java.nio.file.Paths
+import java.nio.file.Files
 
 
 @RunWith(VertxUnitRunner.class)
@@ -20,6 +23,17 @@ class BasicTest {
 
   @Before
   void setUp(TestContext context) {
+    /*
+    TODO: Find a way to copy the authSecrets file from the resources directory
+    to the OS's temporary directory and load the verticle with that file as
+    opposed to using the one within the jar
+    */
+    //url = Thread.currentThread().getContextClassLoader().getResource("auth-prototype/authSecrets.json");
+    path = this.getClass().getResource("authSecrets.json");
+    origPath = Paths.get(path)
+    newPath = Paths.get("/tmp/authSecrets.json") //Need to make this OS agnostic
+    Files.copy(origPath, newPath)
+    
     java.lang.System.setProperty("authType", "flatfile")
     //java.lang.System.setProperty("secretsFilepath", "/tmp/authSecrets.txt")
     java.lang.System.setProperty("loglevel", "debug")
@@ -117,5 +131,118 @@ class BasicTest {
         assert resp.status == 400
       }
     }
+  }
+  
+  @Test
+  void addUserWithNoPerms(TestContext context) {
+    def privilegedToken; //Token from the user with perms
+    def weakToken; //Token from the new users
+    //Get the privileged token
+      
+    httpClient.request( Method.POST, ContentType.JSON ) { req ->
+      uri.path = '/token'
+      body = [
+        username : 'erikthered',
+        password : 'ChickenMonkeyDuck'
+      ]
+
+      response.success = { resp, json ->
+        println resp.headers.'Authorization'
+        privilegedToken = authUtil.extractToken(resp.headers.'Authorization')
+      }
+
+      response.failure = { resp ->
+        println "Failure to authenticate for token: ${resp.statusLine}"
+        context.fail(resp.statusLine.toString())
+      }
+    }
+    
+    // Create our unprivileged user
+    httpClient.request( Method.POST, ContentType.JSON ) { req ->
+      uri.path = '/user'
+      body = [
+        "credentials" : [
+          "username" : "mickey",
+          "password" : "mouse"
+        ],
+        "metadata" : [
+          []
+        ]
+      ]
+      headers.'Authorization' = "Bearer ${privilegedToken}"
+      
+      response.success = { resp, json ->
+        println "User 'mickey' created"
+      }
+      
+      response.failure = { resp ->
+        println "Failure to create new user"
+        context.fail(resp.statusLine.toString())
+      }
+    }
+    
+    //Get the weak token
+    httpClient.request( Method.POST, ContentType.JSON ) { req ->
+      uri.path = '/token'
+      body = [
+        "username" : 'mickey',
+        "password" : 'mouse'
+      ]
+
+      response.success = { resp, json ->
+        println resp.headers.'Authorization'
+        weakToken = authUtil.extractToken(resp.headers.'Authorization')
+      }
+
+      response.failure = { resp ->
+        println "Failure to authenticate for token: ${resp.statusLine}"
+        context.fail(resp.statusLine.toString())
+      }
+    }
+    
+    //Try to add a user with the weak token (expected failure)
+    httpClient.request( Method.POST, ContentType.JSON ) { req ->
+      uri.path = '/user'
+      body = [
+        "credentials" : [
+          "username" : "donald",
+          "password" : "duck"
+        ],
+        "metadata" : [
+          []
+        ]
+      ]
+      headers.'Authorization' = "Bearer ${weakToken}"
+      
+      response.success = { resp, json ->
+        println "User created with unprivileged token. Ungood"
+        context.fail("User should not be created with unprivileged token")
+      }
+      
+      response.failure = { resp ->
+        //do nothing, expected
+      }
+    }
+    
+    //delete the no-perm user
+    httpClient.request( Method.DELETE, ContentType.JSON ) { req ->
+      uri.path = "/user"
+      body = [
+        "credentials" : [
+          "username" : "mickey"
+        ]
+      ]
+      headers.'Authorization' = "Bearer ${privilegedToken}"
+      
+      response.success = { resp, json ->
+        //okay
+      }
+      
+      response.failure = { resp ->
+        println "Unable to delete user 'mickey'"
+        context.fail(resp.statusLine.toString())
+      }
+    }
+      
   }
 }
