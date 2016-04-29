@@ -60,7 +60,7 @@ public class FlatFileAuthStore implements AuthStore {
       }
       for(Object ob : users) {
         JsonObject jOb = (JsonObject)ob;
-        if(!jOb.getString("name").equals(username)) {
+        if(!jOb.containsKey("username") || !jOb.getString("username").equals(username)) {
           continue;
         }
         String storedHash = jOb.getString("hash");
@@ -137,7 +137,7 @@ public class FlatFileAuthStore implements AuthStore {
       }
       for(Object ob : users) {
         JsonObject jOb = (JsonObject)ob;
-        if(!jOb.getString("username").equals(credentials.getString("username"))) {
+        if(!jOb.containsKey("username") || !jOb.getString("username").equals(credentials.getString("username"))) {
           continue;
         }
         jOb.put("username",credentials.getString("username"));
@@ -166,7 +166,7 @@ public class FlatFileAuthStore implements AuthStore {
       }
       for(Object ob : users) {
         JsonObject jOb = (JsonObject)ob;
-        if(!jOb.getString("username").equals(credentials.getString("username"))) {
+        if(!jOb.containsKey("username") || !jOb.getString("username").equals(credentials.getString("username"))) {
           continue;
         }
         users.remove(jOb);
@@ -188,7 +188,7 @@ public class FlatFileAuthStore implements AuthStore {
       }
       for(Object ob : users) {
         JsonObject jOb = (JsonObject)ob;
-        if(jOb.getString("username").equals(credentials.getString("username"))) {
+        if(jOb.containsKey("username") && jOb.getString("username").equals(credentials.getString("username"))) {
           return false; //Name already exists
         }
       }
@@ -215,7 +215,7 @@ public class FlatFileAuthStore implements AuthStore {
       }
       for(Object ob : users) {
         JsonObject jOb = (JsonObject)ob;
-        if(!jOb.getString("username").equals(credentials.getString("username"))) {
+        if(!jOb.containsKey("username") || !jOb.getString("username").equals(credentials.getString("username"))) {
           continue;
         }
         return jOb.getJsonObject("metadata");

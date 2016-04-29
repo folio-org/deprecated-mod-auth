@@ -4,11 +4,13 @@ import com.indexdata.okapi_modules.impl.DummyAuthStore;
 import com.indexdata.okapi_modules.impl.FlatFileAuthStore;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.json.DecodeException;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -30,12 +32,16 @@ public class MainVerticle extends AbstractVerticle {
   private final Long expires = 60L;
   private final TokenStore tokenStore = new DummyTokenStore();
   private final Logger logger = LoggerFactory.getLogger("auth_module");
+  private final String PERMISSIONS_HEADER = "X-Okapi-Permissions";
+  private final String ADD_USER_PERMISSION = "auth_add_user";
+  private final String UPDATE_USER_PERMISSION = "auth_update_user";
+  private final String DELETE_USER_PERMISSION = "auth_delete_user";
   @Override
   public void start(Future<Void> fut) {
   
     String authStoreChoice = System.getProperty("authType", "dummy");
     if(authStoreChoice.equals("flatfile")) {
-      String authSecretsProp = System.getProperty("secretsFilepath", "authSecrets.txt");
+      String authSecretsProp = System.getProperty("secretsFilepath", "authSecrets.json");
       String authSecretsPath;
       if(Paths.get(authSecretsProp).isAbsolute()) {
         authSecretsPath = authSecretsProp;
@@ -63,6 +69,8 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/expire").handler(BodyHandler.create());
     router.post("/expire").handler(this::handleExpireToken);
     router.route("/*").handler(this::handleAuth);
+    router.route("/user").handler(BodyHandler.create());
+    router.route("/user").handler(this::handleUser);
     
     HttpServer server = vertx.createHttpServer();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
@@ -111,7 +119,7 @@ public class MainVerticle extends AbstractVerticle {
         JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
         //If we have a list of permissions stored for this username, assign them as a header
         if(metadata != null && metadata.getJsonArray("permissions") != null) {
-          ctx.response().putHeader("X-Okapi-Permissions", metadata.getJsonArray("permissions").encode());
+          ctx.response().putHeader(PERMISSIONS_HEADER, metadata.getJsonArray("permissions").encode());
         }
         //Assuming that all is well, switch to chunked and return the content
         ctx.response().setChunked(true);
@@ -227,5 +235,76 @@ public class MainVerticle extends AbstractVerticle {
           }
         }
     );
+  }
+  
+  /*
+    Handle user creation and modification,
+    if supported by the current backend
+  */
+  private void handleUser(RoutingContext ctx) {
+    final String postContent = ctx.getBodyAsString();
+    JsonArray permissions = null;
+    try {
+      permissions = new JsonArray(ctx.request().getHeader(PERMISSIONS_HEADER));
+    } catch(Exception e) {
+      //maybe log something?
+    }
+    JsonObject postJson = null;
+    try {
+      postJson = new JsonObject(postContent);
+    } catch (DecodeException dex) {
+      ctx.response()
+        .setStatusCode(400)
+        .end("Unable to parse POST data as JSON");
+      return;
+    }
+
+    if(ctx.request().method() == HttpMethod.POST) {
+      if(permissions == null || !permissions.contains(ADD_USER_PERMISSION)) {
+        ctx.response()
+          .setStatusCode(400)
+          .end("You do not have permission to add new users");
+        return;
+      }
+      boolean success = authStore.addLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata"));
+      if(success) {
+        ctx.response().setStatusCode(200).end(postContent);
+        return;
+      } else {
+        ctx.response().setStatusCode(400).end("Unable to add user");
+        return;
+      }
+    } else if(ctx.request().method() == HttpMethod.PUT) {
+      if(permissions == null || !permissions.contains(UPDATE_USER_PERMISSION)) {
+        ctx.response().setStatusCode(400).end("You do not have permission to modify users");
+        return;
+      }
+      boolean success = authStore.updateLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata"));
+      if(success) {
+        ctx.response().setStatusCode(200).end(postContent);
+        return;
+      } else {
+        ctx.response().setStatusCode(400).end("Unable to update user");
+        return;
+      }
+    } else if(ctx.request().method() == HttpMethod.DELETE) {
+      if(permissions == null || !permissions.contains(DELETE_USER_PERMISSION)) {
+        ctx.response().setStatusCode(400).end("You do not have permission to delete users");
+        return;
+      }
+      boolean success = authStore.removeLogin(postJson.getJsonObject("credentials"));
+      if(success) {
+        ctx.response().setStatusCode(200).end(postContent);
+        return;
+      } else {
+        ctx.response().setStatusCode(400).end("Unable to remove user");
+        return;
+      }
+    } else {
+      ctx.response()
+        .setStatusCode(400)
+        .end("Operation unsupported");
+      return;
+    }
   }
 }
