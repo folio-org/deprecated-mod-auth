@@ -13,6 +13,7 @@ import groovyx.net.http.ContentType
 import java.lang.Thread
 import java.nio.file.Paths
 import java.nio.file.Files
+import groovy.json.JsonOutput
 
 
 @RunWith(VertxUnitRunner.class)
@@ -24,19 +25,25 @@ class BasicTest {
   @Before
   void setUp(TestContext context) {
     /*
-    TODO: Find a way to copy the authSecrets file from the resources directory
-    to the OS's temporary directory and load the verticle with that file as
-    opposed to using the one within the jar
+    Create a JSON file in a temp directory that we'll use as the flatfile
+    for our auth backend
     */
-    //url = Thread.currentThread().getContextClassLoader().getResource("auth-prototype/authSecrets.json");
-    path = this.getClass().getResource("authSecrets.json");
-    origPath = Paths.get(path)
-    newPath = Paths.get("/tmp/authSecrets.json") //Need to make this OS agnostic
-    Files.copy(origPath, newPath)
-    
+    def json_config = [
+      [
+        "username" : "erikthered",
+        "hash" : "878978635FB7D8DD653B64AF0D174A496FFBAE37",
+        "salt" :  "0EB926D24332F4D9",
+        "metadata" : [
+          "permissions" : [ "auth_add_user", "auth_update_user", "auth_delete_user" ]
+        ]
+     ]
+    ]
+    def tempFile = File.createTempFile("authmodule_test", ".json")
+    tempFile.write(JsonOutput.toJson(json_config))
     java.lang.System.setProperty("authType", "flatfile")
-    //java.lang.System.setProperty("secretsFilepath", "/tmp/authSecrets.txt")
+    java.lang.System.setProperty("secretsFilepath", tempFile.getAbsolutePath())
     java.lang.System.setProperty("loglevel", "debug")
+    java.lang.System.setProperty("standalone", "true")
     vertx = Vertx.vertx()
     vertx.deployVerticle(MainVerticle.class.getName(), context.asyncAssertSuccess())
     httpClient = new HTTPBuilder("http://localhost:8081")
@@ -46,11 +53,6 @@ class BasicTest {
   @After
   void tearDown(TestContext context) {
     vertx.close(context.asyncAssertSuccess())
-  }
-  
-  @Test
-  void doBasicTest(TestContext context) {
-    assert true == true
   }
 
   @Test
@@ -86,6 +88,7 @@ class BasicTest {
 
       response.failure = { resp ->
         assert resp.status == 400
+        println "Successfuly rejected token-less access attempt"
       }
     }
 
@@ -97,9 +100,11 @@ class BasicTest {
 
       response.success = { resp ->
         assert resp.status == 202
+        println "Successful access using token"
       }
 
       response.failure = { resp ->
+        println "Unable to access using token ${token}"
         context.fail(resp.statusLine.toString())
       }
     }
@@ -175,8 +180,12 @@ class BasicTest {
         println "User 'mickey' created"
       }
       
-      response.failure = { resp ->
+      response.failure = { resp, reader ->
         println "Failure to create new user"
+        println "Headers:"
+        resp.headers.each { h ->
+          println " ${h.name} : ${h.value}"
+        }
         context.fail(resp.statusLine.toString())
       }
     }
@@ -195,7 +204,7 @@ class BasicTest {
       }
 
       response.failure = { resp ->
-        println "Failure to authenticate for token: ${resp.statusLine}"
+        println "Failure to get token for 'mickey' user: ${resp.statusLine}"
         context.fail(resp.statusLine.toString())
       }
     }

@@ -47,7 +47,7 @@ public class AuthUtil {
     SecureRandom random = new SecureRandom();
     byte bytes[] = new byte[20];
     random.nextBytes(bytes);
-    return new String(bytes);
+    return DatatypeConverter.printHexBinary(bytes);
   }
   
   public JsonObject getClaims(String jwt) {

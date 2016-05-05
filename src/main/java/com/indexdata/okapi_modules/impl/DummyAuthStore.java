@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import com.indexdata.okapi_modules.AuthStore;
 
 public class DummyAuthStore implements AuthStore {
+  
   public AuthResult verifyLogin(JsonObject credentials) {
     AuthResult authResult = new AuthResult(true);
     authResult.setMetadata(null);

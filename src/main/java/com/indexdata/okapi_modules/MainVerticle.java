@@ -18,6 +18,12 @@ import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
 import java.nio.file.Paths;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.impl.crypto.MacProvider;
+import io.jsonwebtoken.SignatureException;
+import java.security.Key;
+
 
 public class MainVerticle extends AbstractVerticle {
 
@@ -27,18 +33,26 @@ public class MainVerticle extends AbstractVerticle {
    */
   private final String signingSecret = "all_zombies_must_dance";
   private final AuthUtil authUtil = new AuthUtil();
-  private AuthStore authStore;
-  private JWTAuth jwtAuth = null;
-  private final Long expires = 60L;
+  private final Long expires = 600L;
   private final TokenStore tokenStore = new DummyTokenStore();
   private final Logger logger = LoggerFactory.getLogger("auth_module");
   private final String PERMISSIONS_HEADER = "X-Okapi-Permissions";
   private final String ADD_USER_PERMISSION = "auth_add_user";
   private final String UPDATE_USER_PERMISSION = "auth_update_user";
   private final String DELETE_USER_PERMISSION = "auth_delete_user";
+  
+  private Key key = MacProvider.generateKey();
+  
+  private AuthStore authStore;
+  private JWTAuth jwtAuth = null;
+  private boolean standalone = false;
+  
   @Override
   public void start(Future<Void> fut) {
-  
+    String standaloneChoice = System.getProperty("standalone", "false");
+    if(standaloneChoice.equals("true")) {
+      standalone = true;
+    }
     String authStoreChoice = System.getProperty("authType", "dummy");
     if(authStoreChoice.equals("flatfile")) {
       String authSecretsProp = System.getProperty("secretsFilepath", "authSecrets.json");
@@ -48,7 +62,7 @@ public class MainVerticle extends AbstractVerticle {
       } else {
         authSecretsPath = this.getClass().getClassLoader().getResource(authSecretsProp).getFile();
       }
-      logger.debug("Using '" + authSecretsPath + "' for user secrets");
+      System.out.println("Using '" + authSecretsPath + "' for user secrets");
       authStore = new FlatFileAuthStore(authSecretsPath);
     } else {
       authStore = new DummyAuthStore();
@@ -104,36 +118,48 @@ public class MainVerticle extends AbstractVerticle {
     if(tokenStore.hasToken(authToken, "expired")) {
         ctx.response()
           .setStatusCode(400)
-          .end("Token is expired");
+          .setStatusMessage("Token is expired")
+          .end();
         return;
     }
-    JsonObject authInfo = new JsonObject().put("jwt", authToken);
-    jwtAuth.authenticate(authInfo, result -> {
-      if(!result.succeeded()) {
+    //JsonObject authInfo = new JsonObject().put("jwt", authToken);
+    try {
+      Jwts.parser().setSigningKey(key).parseClaimsJws(authToken);
+    } catch (SignatureException s) {
         logger.debug("JWT auth did not succeed");
         ctx.response().setStatusCode(400);
-        ctx.response().end("Denied");
+        ctx.response().setStatusMessage("Invalid token");
+        ctx.response().end();
+        System.out.println(authToken + " is not valid");
         return;
-      } else {
-        String username = authUtil.getClaims(authToken).getString("sub");
-        JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
-        //If we have a list of permissions stored for this username, assign them as a header
-        if(metadata != null && metadata.getJsonArray("permissions") != null) {
-          ctx.response().putHeader(PERMISSIONS_HEADER, metadata.getJsonArray("permissions").encode());
-        }
-        //Assuming that all is well, switch to chunked and return the content
-        ctx.response().setChunked(true);
-        ctx.response().setStatusCode(202);
-        //Assign a handler that simply writes back the data
-        ctx.request().handler( data -> {
-          ctx.response().write(data);
-        });
-      //Assign an end handler that closes the request
-        ctx.request().endHandler( data -> {
-          ctx.response().end();
-        });
-      }
-    });
+    }
+      
+    String username = authUtil.getClaims(authToken).getString("sub");
+    JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
+    JsonArray permissions = metadata.getJsonArray("permissions");
+    //If we have a list of permissions stored for this username, assign them as a header
+    if(metadata != null && permissions != null) {
+      System.out.println("Assigning metadata header containing: " + permissions.encode());
+      ctx.response().putHeader(PERMISSIONS_HEADER, permissions.encode());
+    } else {
+      System.out.println("No permission header assigned for request");
+    }
+    //Assuming that all is well, switch to chunked and return the content
+    if(!this.standalone) {
+      ctx.response().setChunked(true);
+      ctx.response().setStatusCode(202);
+      //Assign a handler that simply writes back the data
+      ctx.request().handler( data -> {
+        ctx.response().write(data);
+      });
+    //Assign an end handler that closes the request
+      ctx.request().endHandler( data -> {
+        ctx.response().end();
+      });
+    } else {
+      ctx.next();
+    }
+      
   }
 
   /*
@@ -162,16 +188,20 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
     if(!authStore.verifyLogin(json).getSuccess()) {
-        ctx.response().setStatusCode(400);
-        ctx.response().end("Invalid credentials");
+        ctx.response().setStatusCode(403);
+        ctx.response().setStatusMessage("Invalid credentials").end();
         return;
     }
     ctx.response().setStatusCode(200);
+    String token = Jwts.builder().setSubject(json.getString("username")).signWith(SignatureAlgorithm.HS256, key).compact();
+    /*
     String token = jwtAuth.generateToken(
-        new JsonObject().put("username", json.getString("username")),
+        new JsonObject().put("sub", json.getString("username")),
         new JWTOptions().setExpiresInSeconds(expires)
     );
+    */
     ctx.response().putHeader("Authorization", "Bearer " + token);
+    System.out.println("Generated new token: " + token);
     ctx.response().end(postContent);
   }
 
@@ -188,7 +218,8 @@ public class MainVerticle extends AbstractVerticle {
     if(authToken == null) {
       ctx.response()
         .setStatusCode(400)
-        .end("No valid JWT token found.");
+        .setStatusMessage("No valid JWT token found.")
+        .end();
       return;
     }
     /*
@@ -197,25 +228,26 @@ public class MainVerticle extends AbstractVerticle {
      */
     if(tokenStore.hasToken(authToken, "expired")) {
         ctx.response().setStatusCode(400);
-        ctx.response().end("Token is already expired");
+        ctx.response().setStatusMessage("Token is already expired").end();
         return;
     }
     try {
       json = new JsonObject(postContent);
     } catch(DecodeException dex) {
       ctx.response().setStatusCode(400);
-      ctx.response().end("Unable to decode '" + postContent + "' as valid JSON");
+      ctx.response().setStatusMessage("Unable to decode payload as valid JSON").end();
       return;
     }
     if(!json.containsKey("token")) {
         ctx.response().setStatusCode(400);
-        ctx.response().end("POST JSON must contain the field 'token'");
+        ctx.response().setStatusMessage("POST JSON must contain the field 'token'").end();
         return;
     }
     if(!authToken.equals(json.getString("token"))) {
       ctx.response()
         .setStatusCode(400)
-        .end("Token to expire does not match actual token");
+        .setStatusMessage("Token to expire does not match actual token")
+        .end();
       return;
     }
     final String expireToken = json.getString("token");
@@ -225,7 +257,8 @@ public class MainVerticle extends AbstractVerticle {
           if(!result.succeeded()) {
             ctx.response()
               .setStatusCode(400)
-              .end("Denied");
+              .setStatusMessage("Denied")
+              .end();
           } else {
             ctx.response()
               .setStatusCode(200)
@@ -255,28 +288,31 @@ public class MainVerticle extends AbstractVerticle {
     } catch (DecodeException dex) {
       ctx.response()
         .setStatusCode(400)
-        .end("Unable to parse POST data as JSON");
+        .setStatusMessage("Unable to parse POST data as JSON")
+        .end();
       return;
     }
 
     if(ctx.request().method() == HttpMethod.POST) {
       if(permissions == null || !permissions.contains(ADD_USER_PERMISSION)) {
         ctx.response()
-          .setStatusCode(400)
-          .end("You do not have permission to add new users");
+          .setStatusCode(401)
+          .setStatusMessage("You do not have permission to add new users")
+          .end();
         return;
       }
+      System.out.println("Calling addLogin");
       boolean success = authStore.addLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata"));
       if(success) {
         ctx.response().setStatusCode(200).end(postContent);
         return;
       } else {
-        ctx.response().setStatusCode(400).end("Unable to add user");
+        ctx.response().setStatusCode(400).setStatusMessage("Unable to add user").end();
         return;
       }
     } else if(ctx.request().method() == HttpMethod.PUT) {
       if(permissions == null || !permissions.contains(UPDATE_USER_PERMISSION)) {
-        ctx.response().setStatusCode(400).end("You do not have permission to modify users");
+        ctx.response().setStatusCode(401).setStatusMessage("You do not have permission to modify users").end();
         return;
       }
       boolean success = authStore.updateLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata"));
@@ -289,7 +325,7 @@ public class MainVerticle extends AbstractVerticle {
       }
     } else if(ctx.request().method() == HttpMethod.DELETE) {
       if(permissions == null || !permissions.contains(DELETE_USER_PERMISSION)) {
-        ctx.response().setStatusCode(400).end("You do not have permission to delete users");
+        ctx.response().setStatusCode(401).setStatusMessage("You do not have permission to delete users").end();
         return;
       }
       boolean success = authStore.removeLogin(postJson.getJsonObject("credentials"));
@@ -297,13 +333,14 @@ public class MainVerticle extends AbstractVerticle {
         ctx.response().setStatusCode(200).end(postContent);
         return;
       } else {
-        ctx.response().setStatusCode(400).end("Unable to remove user");
+        ctx.response().setStatusCode(400).setStatusMessage("Unable to remove user").end();
         return;
       }
     } else {
       ctx.response()
         .setStatusCode(400)
-        .end("Operation unsupported");
+        .setStatusMessage("Operation unsupported")
+        .end();
       return;
     }
   }

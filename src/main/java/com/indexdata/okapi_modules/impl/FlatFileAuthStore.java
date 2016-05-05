@@ -44,6 +44,7 @@ public class FlatFileAuthStore implements AuthStore {
 
   public FlatFileAuthStore(String secretsFilepath) {
     this.secretsFilepath = secretsFilepath;
+    deserializeFile();
   }
 
   /*
@@ -103,10 +104,12 @@ public class FlatFileAuthStore implements AuthStore {
   }
   
   private void serializeFile() {
-    String userdata = this.users.encode();
+    String userdata = this.users.encodePrettily();
+    System.out.println("Writing string '" + userdata + "' to file '" + secretsFilepath + "'");
     try {
         PrintWriter printWriter = new PrintWriter(secretsFilepath);
         printWriter.write(userdata);
+        printWriter.flush();
         printWriter.close();
     } catch(IOException e) {
       throw new RuntimeException(e);
@@ -183,10 +186,10 @@ public class FlatFileAuthStore implements AuthStore {
   public boolean addLogin(JsonObject credentials, JsonObject metadata) {
     fileLock.lock();
     try {
-      if(users == null) {
+      if(this.users == null) {
         deserializeFile();
       }
-      for(Object ob : users) {
+      for(Object ob : this.users) {
         JsonObject jOb = (JsonObject)ob;
         if(jOb.containsKey("username") && jOb.getString("username").equals(credentials.getString("username"))) {
           return false; //Name already exists
@@ -199,7 +202,7 @@ public class FlatFileAuthStore implements AuthStore {
       newUser.put("salt", salt);
       newUser.put("hash", hash);
       newUser.put("metadata", metadata);
-      users.add(newUser);
+      this.users.add(newUser);
       serializeFile();
       return true;
     } finally {
