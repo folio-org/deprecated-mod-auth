@@ -78,9 +78,8 @@ class BasicTest {
     }
     
     //Try to access a protected resource without our token
-    httpClient.request(Method.POST, ContentType.TEXT) { req ->
-      uri.path = '/'
-      body = "Hello world!"
+    httpClient.request(Method.GET, ContentType.TEXT) { req ->
+      uri.path = '/dummy'
 
       response.success = { resp ->
         context.fail("Failed to require authorization")
@@ -93,13 +92,12 @@ class BasicTest {
     }
 
     //Try to access a protected resource with our token
-    httpClient.request(Method.POST, ContentType.TEXT) { req ->
-      uri.path = '/'
-      body = "Hello again, world!"
+    httpClient.request(Method.GET, ContentType.TEXT) { req ->
+      uri.path = '/dummy'
       headers.'Authorization' = "Bearer ${token}"
 
       response.success = { resp ->
-        assert resp.status == 202
+        assert resp.status == 200
         println "Successful access using token"
       }
 
@@ -108,6 +106,8 @@ class BasicTest {
         context.fail(resp.statusLine.toString())
       }
     }
+    
+    /*
     //Expire the token
 
     httpClient.request(Method.POST, ContentType.JSON) { req ->
@@ -136,8 +136,11 @@ class BasicTest {
         assert resp.status == 400
       }
     }
+    */
   }
   
+  //This test is invalid, because we can't modify headers between handlers
+  /*
   @Test
   void addUserWithNoPerms(TestContext context) {
     def privilegedToken; //Token from the user with perms
@@ -254,4 +257,5 @@ class BasicTest {
     }
       
   }
+  */
 }

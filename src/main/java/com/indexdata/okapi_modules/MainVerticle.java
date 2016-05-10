@@ -80,11 +80,12 @@ public class MainVerticle extends AbstractVerticle {
 
     router.post("/token").handler(BodyHandler.create()); //Allow us to read the POST data
     router.post("/token").handler(this::handleCreateToken);
-    router.post("/expire").handler(BodyHandler.create());
-    router.post("/expire").handler(this::handleExpireToken);
     router.route("/*").handler(this::handleAuth);
     router.route("/user").handler(BodyHandler.create());
     router.route("/user").handler(this::handleUser);
+    router.post("/expire").handler(BodyHandler.create());
+    router.post("/expire").handler(this::handleExpireToken);
+    router.get("/dummy").handler(this::handleDummy);
     
     HttpServer server = vertx.createHttpServer();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
@@ -343,5 +344,12 @@ public class MainVerticle extends AbstractVerticle {
         .end();
       return;
     }
+  }
+  
+  private void handleDummy(RoutingContext ctx) {
+    ctx.response()
+      .setStatusCode(200)
+      .end("{\"message\" : \"Dummy\"}");
+    return;
   }
 }

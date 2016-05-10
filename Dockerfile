@@ -8,17 +8,18 @@
 
 FROM java:8
 
-ENV VERTICLE_FILE auth-prototype-0.1-SNAPSHOT-fat.jar
+ENV VERTICLE_FILE auth-prototype-fat.jar
 
 # Set the location of the verticles
 ENV VERTICLE_HOME /usr/verticles
 
-#EXPOSE 8080
+EXPOSE 8081
 
 # Copy your fat jar to the container
 COPY target/$VERTICLE_FILE $VERTICLE_HOME/
+COPY src/main/resources/authSecrets.json $VERTICLE_HOME/
 
 # Launch the verticle
 WORKDIR $VERTICLE_HOME
 ENTRYPOINT ["sh", "-c"]
-CMD ["java -jar -Dport=8081 $VERTICLE_FILE"]
+CMD ["java -jar -Dport=8081 -DauthType=flatfile -DsecretsFilepath=/usr/verticles/authSecrets.json $VERTICLE_FILE"]
