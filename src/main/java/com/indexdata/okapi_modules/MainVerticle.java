@@ -22,6 +22,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.crypto.MacProvider;
 import io.jsonwebtoken.SignatureException;
+import io.jsonwebtoken.JwtParser;
 import java.security.Key;
 
 
@@ -124,9 +125,11 @@ public class MainVerticle extends AbstractVerticle {
         return;
     }
     //JsonObject authInfo = new JsonObject().put("jwt", authToken);
+    JwtParser parser = null;
     try {
-      Jwts.parser().setSigningKey(key).parseClaimsJws(authToken);
-    } catch (SignatureException s) {
+      parser = Jwts.parser().setSigningKey(key);
+      parser.parseClaimsJws(authToken);
+    } catch (io.jsonwebtoken.MalformedJwtException|SignatureException s) {
         logger.debug("JWT auth did not succeed");
         ctx.response().setStatusCode(400);
         ctx.response().setStatusMessage("Invalid token");
@@ -134,10 +137,14 @@ public class MainVerticle extends AbstractVerticle {
         System.out.println(authToken + " is not valid");
         return;
     }
+ 
       
     String username = authUtil.getClaims(authToken).getString("sub");
     JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
-    JsonArray permissions = metadata.getJsonArray("permissions");
+    JsonArray permissions = null;
+    if(metadata != null) {
+      permissions = metadata.getJsonArray("permissions");
+    }
     //If we have a list of permissions stored for this username, assign them as a header
     if(metadata != null && permissions != null) {
       System.out.println("Assigning metadata header containing: " + permissions.encode());
@@ -146,20 +153,20 @@ public class MainVerticle extends AbstractVerticle {
       System.out.println("No permission header assigned for request");
     }
     //Assuming that all is well, switch to chunked and return the content
-    if(!this.standalone) {
-      ctx.response().setChunked(true);
-      ctx.response().setStatusCode(202);
-      //Assign a handler that simply writes back the data
-      ctx.request().handler( data -> {
-        ctx.response().write(data);
-      });
-    //Assign an end handler that closes the request
-      ctx.request().endHandler( data -> {
-        ctx.response().end();
-      });
-    } else {
-      ctx.next();
-    }
+
+    ctx.response().setChunked(true);
+    ctx.response().setStatusCode(202);
+  
+    //Assign a handler that simply writes back the data
+    ctx.request().handler( data -> {
+      ctx.response().write(data);
+    });
+  //Assign an end handler that closes the request
+    ctx.request().endHandler( data -> {
+      ctx.response().end();
+    });
+    
+   
       
   }
 

@@ -213,13 +213,14 @@ public class FlatFileAuthStore implements AuthStore {
   @Override
   public JsonObject getMetadata(JsonObject credentials) {
     fileLock.lock();
+    String username = credentials.getString("username");
     try {
       if(users == null) {
         deserializeFile();
       }
       for(Object ob : users) {
         JsonObject jOb = (JsonObject)ob;
-        if(!jOb.containsKey("username") || !jOb.getString("username").equals(credentials.getString("username"))) {
+        if(!jOb.containsKey("username") || !jOb.getString("username").equals(username)) {
           continue;
         }
         return jOb.getJsonObject("metadata");

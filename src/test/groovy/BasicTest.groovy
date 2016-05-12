@@ -43,7 +43,7 @@ class BasicTest {
     java.lang.System.setProperty("authType", "flatfile")
     java.lang.System.setProperty("secretsFilepath", tempFile.getAbsolutePath())
     java.lang.System.setProperty("loglevel", "debug")
-    java.lang.System.setProperty("standalone", "true")
+    //java.lang.System.setProperty("standalone", "true")
     vertx = Vertx.vertx()
     vertx.deployVerticle(MainVerticle.class.getName(), context.asyncAssertSuccess())
     httpClient = new HTTPBuilder("http://localhost:8081")
@@ -97,7 +97,7 @@ class BasicTest {
       headers.'Authorization' = "Bearer ${token}"
 
       response.success = { resp ->
-        assert resp.status == 200
+        assert resp.status == 202
         println "Successful access using token"
       }
 
