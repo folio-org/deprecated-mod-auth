@@ -23,6 +23,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.impl.crypto.MacProvider;
 import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.JwtParser;
+import io.vertx.core.http.HttpClientRequest;
+import io.vertx.core.http.HttpServerRequest;
 import java.security.Key;
 
 
@@ -98,7 +100,69 @@ public class MainVerticle extends AbstractVerticle {
         }
     });  
   }
+  
+  private JsonObject checkAuthRequest(HttpServerRequest request) {
+    JsonObject result = new JsonObject();
+    result.put("headers", new JsonObject());
 
+    String authHeader = request.headers().get("Authorization");
+    String authToken = authUtil.extractToken(authHeader);
+    if(authToken == null) {
+      //ctx.response().putHeader("Content-Type", "text/plain");
+      result.put("errorCode", 400);
+      //ctx.response().setStatusCode(400);
+      //ctx.response().end("No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
+      result.put("message", "No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
+      return result;
+    }
+    // Is the token in our listing of expired tokens? 
+    if(tokenStore.hasToken(authToken, "expired")) {
+      result.put("errorCode", 400);
+      result.put("message", "Token is expired.");
+      /*
+        ctx.response()
+          .setStatusCode(400)
+          .setStatusMessage("Token is expired")
+          .end();
+      */
+      return result;
+    }
+    //JsonObject authInfo = new JsonObject().put("jwt", authToken);
+    JwtParser parser = null;
+    try {
+      parser = Jwts.parser().setSigningKey(key);
+      parser.parseClaimsJws(authToken);
+    } catch (io.jsonwebtoken.MalformedJwtException|SignatureException s) {
+        logger.debug("JWT auth did not succeed");
+        result.put("errorCode", 400);
+        result.put("message", "Invalid token.");
+        /*
+        ctx.response().setStatusCode(400)
+          .putHeader("Content-Type", "text/plain")
+          .end("Invalid token");
+        */
+        System.out.println(authToken + " is not valid");
+        return result;
+    }
+
+    String username = authUtil.getClaims(authToken).getString("sub");
+    JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
+    JsonArray permissions = null;
+    if(metadata != null) {
+      permissions = metadata.getJsonArray("permissions");
+    }
+    //If we have a list of permissions stored for this username, assign them as a header
+    if(metadata != null && permissions != null) {
+      System.out.println("Assigning metadata header containing: " + permissions.encode());
+      //ctx.response().putHeader(PERMISSIONS_HEADER, permissions.encode());
+      result.getJsonObject("headers").put(PERMISSIONS_HEADER, permissions.encode());
+    } else {
+      System.out.println("No permission header assigned for request");
+    }
+    return result;
+  }
+  
+  
   /*
    * The handler to actually check that a JWT token is valid. If it is,
    * return a status of 202 and write the request content (if any)
@@ -109,51 +173,22 @@ public class MainVerticle extends AbstractVerticle {
    * in the method required by Okapi
    */
   private void handleAuth(RoutingContext ctx) {
-    String authHeader = ctx.request().headers().get("Authorization");
-    String authToken = authUtil.extractToken(authHeader);
-    if(authToken == null) {
-      ctx.response().setStatusCode(400);
-      ctx.response().end("No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
+    JsonObject authResult = this.checkAuthRequest(ctx.request());
+    if(authResult.containsKey("errorCode")) {
+      ctx.response().putHeader("Content-Type", "text/plain");
+      ctx.response().setStatusCode(authResult.getInteger("errorCode"));
+      ctx.response().end(authResult.getString("message"));    
       return;
     }
-    // Is the token in our listing of expired tokens? 
-    if(tokenStore.hasToken(authToken, "expired")) {
-        ctx.response()
-          .setStatusCode(400)
-          .setStatusMessage("Token is expired")
-          .end();
-        return;
-    }
-    //JsonObject authInfo = new JsonObject().put("jwt", authToken);
-    JwtParser parser = null;
-    try {
-      parser = Jwts.parser().setSigningKey(key);
-      parser.parseClaimsJws(authToken);
-    } catch (io.jsonwebtoken.MalformedJwtException|SignatureException s) {
-        logger.debug("JWT auth did not succeed");
-        ctx.response().setStatusCode(400);
-        ctx.response().setStatusMessage("Invalid token");
-        ctx.response().end();
-        System.out.println(authToken + " is not valid");
-        return;
-    }
- 
-      
-    String username = authUtil.getClaims(authToken).getString("sub");
-    JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
-    JsonArray permissions = null;
-    if(metadata != null) {
-      permissions = metadata.getJsonArray("permissions");
-    }
-    //If we have a list of permissions stored for this username, assign them as a header
-    if(metadata != null && permissions != null) {
-      System.out.println("Assigning metadata header containing: " + permissions.encode());
-      ctx.response().putHeader(PERMISSIONS_HEADER, permissions.encode());
-    } else {
-      System.out.println("No permission header assigned for request");
-    }
+    
     //Assuming that all is well, switch to chunked and return the content
-
+    if(authResult.containsKey("headers")) {
+      JsonObject headers = authResult.getJsonObject("headers");
+      for(String key : headers.fieldNames()) {
+        ctx.response().putHeader(key, headers.getString(key));
+      }
+    }
+    //ctx.response().putHeader(PERMISSIONS_HEADER, authResult.getJsonObject("headers").getString(PERMISSIONS_HEADER));
     ctx.response().setChunked(true);
     ctx.response().setStatusCode(202);
   
