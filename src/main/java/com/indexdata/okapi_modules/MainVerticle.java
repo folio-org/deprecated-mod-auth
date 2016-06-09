@@ -83,9 +83,10 @@ public class MainVerticle extends AbstractVerticle {
 
     router.post("/token").handler(BodyHandler.create()); //Allow us to read the POST data
     router.post("/token").handler(this::handleCreateToken);
-    router.route("/*").handler(this::handleAuth);
     router.route("/user").handler(BodyHandler.create());
+    router.delete("/user/:username").handler(this::handleUser);
     router.route("/user").handler(this::handleUser);
+    router.route("/*").handler(this::handleAuth);
     router.post("/expire").handler(BodyHandler.create());
     router.post("/expire").handler(this::handleExpireToken);
     router.get("/dummy").handler(this::handleDummy);
@@ -173,6 +174,7 @@ public class MainVerticle extends AbstractVerticle {
    * in the method required by Okapi
    */
   private void handleAuth(RoutingContext ctx) {
+    System.out.println("Calling handleAuth");
     JsonObject authResult = this.checkAuthRequest(ctx.request());
     if(authResult.containsKey("errorCode")) {
       ctx.response().putHeader("Content-Type", "text/plain");
@@ -186,6 +188,7 @@ public class MainVerticle extends AbstractVerticle {
       JsonObject headers = authResult.getJsonObject("headers");
       for(String key : headers.fieldNames()) {
         ctx.response().putHeader(key, headers.getString(key));
+        System.out.println("Adding header " + key + " with value of " + headers.getString(key));
       }
     }
     //ctx.response().putHeader(PERMISSIONS_HEADER, authResult.getJsonObject("headers").getString(PERMISSIONS_HEADER));
@@ -199,10 +202,7 @@ public class MainVerticle extends AbstractVerticle {
   //Assign an end handler that closes the request
     ctx.request().endHandler( data -> {
       ctx.response().end();
-    });
-    
-   
-      
+    });      
   }
 
   /*
@@ -318,23 +318,36 @@ public class MainVerticle extends AbstractVerticle {
     if supported by the current backend
   */
   private void handleUser(RoutingContext ctx) {
+    System.out.println("Calling handleUser");
+    JsonObject authResult = this.checkAuthRequest(ctx.request());
+    if(authResult.containsKey("errorCode")) {
+      ctx.response()
+        .setStatusCode(authResult.getInteger("errorCode"))
+        .end(authResult.getString("message"));
+      return;
+    }
     final String postContent = ctx.getBodyAsString();
     JsonArray permissions = null;
     try {
-      permissions = new JsonArray(ctx.request().getHeader(PERMISSIONS_HEADER));
+      permissions = new JsonArray(authResult.getJsonObject("headers").getString(PERMISSIONS_HEADER));
+      //permissions = new JsonArray(ctx.request().getHeader(PERMISSIONS_HEADER));
     } catch(Exception e) {
       //maybe log something?
     }
     JsonObject postJson = null;
-    try {
-      postJson = new JsonObject(postContent);
-    } catch (DecodeException dex) {
-      ctx.response()
-        .setStatusCode(400)
-        .setStatusMessage("Unable to parse POST data as JSON")
-        .end();
-      return;
+    if(ctx.request().method() == HttpMethod.POST || ctx.request().method() == HttpMethod.PUT) {
+      try {
+        postJson = new JsonObject(postContent);
+      } catch (DecodeException dex) {
+        ctx.response()
+          .setStatusCode(400)
+          .end("Unable to parse POST data as JSON");
+        System.out.println("Bad JSON format for postdata: " + postContent);
+        return;
+      }
     }
+    
+    //System.out.println("Permissions and postcontent successfully received");
 
     if(ctx.request().method() == HttpMethod.POST) {
       if(permissions == null || !permissions.contains(ADD_USER_PERMISSION)) {
@@ -350,7 +363,7 @@ public class MainVerticle extends AbstractVerticle {
         ctx.response().setStatusCode(200).end(postContent);
         return;
       } else {
-        ctx.response().setStatusCode(400).setStatusMessage("Unable to add user").end();
+        ctx.response().setStatusCode(400).end("Unable to add user");
         return;
       }
     } else if(ctx.request().method() == HttpMethod.PUT) {
@@ -367,23 +380,26 @@ public class MainVerticle extends AbstractVerticle {
         return;
       }
     } else if(ctx.request().method() == HttpMethod.DELETE) {
+      System.out.println("Deletion requested");
       if(permissions == null || !permissions.contains(DELETE_USER_PERMISSION)) {
-        ctx.response().setStatusCode(401).setStatusMessage("You do not have permission to delete users").end();
+        ctx.response().setStatusCode(401).end("You do not have permission to delete users");
         return;
       }
-      boolean success = authStore.removeLogin(postJson.getJsonObject("credentials"));
+      String username = ctx.request().getParam("username");
+      System.out.println("Calling removeLogin");
+      boolean success = authStore.removeLogin(new JsonObject().put("username", username));
+      //boolean success = authStore.removeLogin(postJson.getJsonObject("credentials"));
       if(success) {
-        ctx.response().setStatusCode(200).end(postContent);
+        ctx.response().setStatusCode(200).end();
         return;
       } else {
-        ctx.response().setStatusCode(400).setStatusMessage("Unable to remove user").end();
+        ctx.response().setStatusCode(400).end("Unable to remove user " + username);
         return;
       }
     } else {
       ctx.response()
         .setStatusCode(400)
-        .setStatusMessage("Operation unsupported")
-        .end();
+        .end("Operation unsupported");
       return;
     }
   }

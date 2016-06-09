@@ -176,6 +176,7 @@ public class FlatFileAuthStore implements AuthStore {
         serializeFile();
         return true;
       }
+      System.out.println("Unable to locate " + credentials.getString("username") + " in users list");
       return false;
     } finally {
       fileLock.unlock();
@@ -192,6 +193,7 @@ public class FlatFileAuthStore implements AuthStore {
       for(Object ob : this.users) {
         JsonObject jOb = (JsonObject)ob;
         if(jOb.containsKey("username") && jOb.getString("username").equals(credentials.getString("username"))) {
+          System.out.println(credentials.getString("username") + " already exists.");
           return false; //Name already exists
         }
       }
