@@ -25,6 +25,8 @@ import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.JwtParser;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpServerRequest;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.security.Key;
 
 
@@ -56,6 +58,20 @@ public class MainVerticle extends AbstractVerticle {
     if(standaloneChoice.equals("true")) {
       standalone = true;
     }
+    String authParamsFilepath = System.getProperty("authParamsFilepath", null);
+    JsonObject authParams;
+    if(authParamsFilepath == null) {
+      authParams = new JsonObject()
+              .put("iterations", 1000)
+              .put("keyLength", 160)
+              .put("algorithm", "PBKDF2WithHmacSHA1");
+    } else {
+      try {
+        authParams = new JsonObject(new String(Files.readAllBytes(Paths.get(authParamsFilepath))));
+      } catch(IOException ioe) {
+        throw new RuntimeException(ioe);
+      }
+    }
     String authStoreChoice = System.getProperty("authType", "dummy");
     if(authStoreChoice.equals("flatfile")) {
       String authSecretsProp = System.getProperty("secretsFilepath", "authSecrets.json");
@@ -66,10 +82,11 @@ public class MainVerticle extends AbstractVerticle {
         authSecretsPath = this.getClass().getClassLoader().getResource(authSecretsProp).getFile();
       }
       System.out.println("Using '" + authSecretsPath + "' for user secrets");
-      authStore = new FlatFileAuthStore(authSecretsPath);
+      authStore = new FlatFileAuthStore(authSecretsPath, authParams);
     } else {
       authStore = new DummyAuthStore();
     }
+
     JsonObject jwtAuthConfig = new JsonObject()
       .put("keyStore", new JsonObject()
           .put("path", "keystore.jceks") //this resolves relative to our resources/ dir
@@ -147,7 +164,7 @@ public class MainVerticle extends AbstractVerticle {
     }
 
     String username = authUtil.getClaims(authToken).getString("sub");
-    JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username));
+    JsonObject metadata = authStore.getMetadata(new JsonObject().put("username", username)).result();
     JsonArray permissions = null;
     if(metadata != null) {
       permissions = metadata.getJsonArray("permissions");
@@ -230,7 +247,7 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().end("POST must be in JSON format and contain fields for both username and password");
       return;
     }
-    if(!authStore.verifyLogin(json).getSuccess()) {
+    if(!authStore.verifyLogin(json).result().getSuccess()) {
         ctx.response().setStatusCode(403);
         ctx.response().setStatusMessage("Invalid credentials").end();
         return;
@@ -358,7 +375,7 @@ public class MainVerticle extends AbstractVerticle {
         return;
       }
       System.out.println("Calling addLogin");
-      boolean success = authStore.addLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata"));
+      boolean success = authStore.addLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata")).result();
       if(success) {
         ctx.response().setStatusCode(200).end(postContent);
         return;
@@ -371,7 +388,7 @@ public class MainVerticle extends AbstractVerticle {
         ctx.response().setStatusCode(401).setStatusMessage("You do not have permission to modify users").end();
         return;
       }
-      boolean success = authStore.updateLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata"));
+      boolean success = authStore.updateLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata")).result();
       if(success) {
         ctx.response().setStatusCode(200).end(postContent);
         return;
@@ -387,7 +404,7 @@ public class MainVerticle extends AbstractVerticle {
       }
       String username = ctx.request().getParam("username");
       System.out.println("Calling removeLogin");
-      boolean success = authStore.removeLogin(new JsonObject().put("username", username));
+      boolean success = authStore.removeLogin(new JsonObject().put("username", username)).result();
       //boolean success = authStore.removeLogin(postJson.getJsonObject("credentials"));
       if(success) {
         ctx.response().setStatusCode(200).end();

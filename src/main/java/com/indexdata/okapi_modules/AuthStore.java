@@ -1,12 +1,13 @@
 package com.indexdata.okapi_modules;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 
 public interface AuthStore {
-    public AuthResult verifyLogin(JsonObject credentials);
-    public boolean updateLogin(JsonObject credentials, JsonObject metadata);
-    public boolean removeLogin(JsonObject credentials);
-    public boolean addLogin(JsonObject credentials, JsonObject metadata);
-    public JsonObject getMetadata(JsonObject credentials);
+    public Future<AuthResult> verifyLogin(JsonObject credentials);
+    public Future<Boolean> updateLogin(JsonObject credentials, JsonObject metadata);
+    public Future<Boolean> removeLogin(JsonObject credentials);
+    public Future<Boolean> addLogin(JsonObject credentials, JsonObject metadata);
+    public Future<JsonObject> getMetadata(JsonObject credentials);
 
 }

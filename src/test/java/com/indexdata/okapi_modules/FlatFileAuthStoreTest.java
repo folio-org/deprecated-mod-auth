@@ -23,6 +23,7 @@ public class FlatFileAuthStoreTest {
 
   private FlatFileAuthStore ffAS;
   JsonObject credentials;
+  JsonObject authParams;
   
   @Before
   public void setUp() throws IOException {
@@ -34,15 +35,19 @@ public class FlatFileAuthStoreTest {
     PrintWriter dump = new PrintWriter(tempConfigFile.getAbsolutePath());
     dump.write(jsonFileContents);
     dump.close();
-    credentials = new JsonObject();
-    credentials.put("username", "erikthered");
-    credentials.put("password", "ChickenMonkeyDuck");
-    ffAS = new FlatFileAuthStore(tempConfigFile.getAbsolutePath());
+    credentials = new JsonObject()
+            .put("username", "erikthered")
+            .put("password", "ChickenMonkeyDuck");
+    authParams = new JsonObject()
+              .put("iterations", 1000)
+              .put("keyLength", 160)
+              .put("algorithm", "PBKDF2WithHmacSHA1");
+    ffAS = new FlatFileAuthStore(tempConfigFile.getAbsolutePath(), authParams);
   }  
   
   @Test
   public void testMetadata() {
-    JsonObject metadata = ffAS.getMetadata(credentials);
+    JsonObject metadata = ffAS.getMetadata(credentials).result();
     assert(metadata.containsKey("permissions"));
   }
   
@@ -54,7 +59,7 @@ public class FlatFileAuthStoreTest {
     JsonObject newMetadata = new JsonObject();
     newMetadata.put("permissions", new JsonArray().add("auth_add_user").add("auth_update_user"));
     ffAS.addLogin(newCreds, newMetadata);
-    assert(ffAS.getMetadata(newCreds).getJsonArray("permissions").contains("auth_update_user"));
+    assert(ffAS.getMetadata(newCreds).result().getJsonArray("permissions").contains("auth_update_user"));
   }
   
   @After

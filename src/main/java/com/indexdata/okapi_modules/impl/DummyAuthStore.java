@@ -3,32 +3,33 @@ package com.indexdata.okapi_modules.impl;
 import com.indexdata.okapi_modules.AuthResult;
 import io.vertx.core.json.JsonObject;
 import com.indexdata.okapi_modules.AuthStore;
+import io.vertx.core.Future;
 
 public class DummyAuthStore implements AuthStore {
   
-  public AuthResult verifyLogin(JsonObject credentials) {
+  public Future<AuthResult> verifyLogin(JsonObject credentials) {
     AuthResult authResult = new AuthResult(true);
     authResult.setMetadata(null);
-    return authResult;
+    return Future.succeededFuture(authResult);
   }
 
   @Override
-  public boolean updateLogin(JsonObject credentials, JsonObject metadata) {
-    return true;
+  public Future<Boolean> updateLogin(JsonObject credentials, JsonObject metadata) {
+    return Future.succeededFuture(new Boolean(true));
   }
 
   @Override
-  public boolean removeLogin(JsonObject credentials) {
-    return true;
+  public Future<Boolean> removeLogin(JsonObject credentials) {
+    return Future.succeededFuture(new Boolean(true));
   }
 
   @Override
-  public boolean addLogin(JsonObject credentials, JsonObject metadata) {
-    return true;
+  public Future<Boolean> addLogin(JsonObject credentials, JsonObject metadata) {
+    return Future.succeededFuture(new Boolean(true));
   }
 
   @Override
-  public JsonObject getMetadata(JsonObject credentials) {
-    return null;
+  public Future<JsonObject> getMetadata(JsonObject credentials) {
+    return Future.succeededFuture(null);
   }
 }

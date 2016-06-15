@@ -20,6 +20,7 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import com.indexdata.okapi_modules.AuthStore;
 import com.indexdata.okapi_modules.AuthUtil;
+import io.vertx.core.Future;
 import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.nio.file.Files;
@@ -35,15 +36,17 @@ import java.util.concurrent.locks.ReentrantLock;
 public class FlatFileAuthStore implements AuthStore {
 
   final private String secretsFilepath;
-  final private int iterations = 1000;
-  final private int keyLength = 160;
-  final private String algorithm = "PBKDF2WithHmacSHA1";
+  //final private int iterations = 1000;
+  //final private int keyLength = 160;
+  //final private String algorithm = "PBKDF2WithHmacSHA1";
   final private AuthUtil authUtil = new AuthUtil();
   private ReentrantLock fileLock = new ReentrantLock();
   private JsonArray users = null;
+  private JsonObject authParams;
 
-  public FlatFileAuthStore(String secretsFilepath) {
+  public FlatFileAuthStore(String secretsFilepath, JsonObject authParams) {
     this.secretsFilepath = secretsFilepath;
+    this.authParams = authParams;
     deserializeFile();
   }
 
@@ -117,22 +120,23 @@ public class FlatFileAuthStore implements AuthStore {
   }
 
   private String calculateHash(String password, String salt) {
-    return authUtil.calculateHash(password, salt, algorithm, iterations, keyLength);
+    return authUtil.calculateHash(password, salt, authParams.getString("algorithm"), 
+            authParams.getInteger("iterations"), authParams.getInteger("keyLength"));
   }
 
   @Override
-  public AuthResult verifyLogin(JsonObject credentials) {
+  public Future<AuthResult> verifyLogin(JsonObject credentials) {
     /*
     TODO: Implement caching
     */
     CheckResult checkResult = checkPassword(credentials.getString("username"), credentials.getString("password"));
     AuthResult authResult = new AuthResult(checkResult.isSuccess());
     authResult.setMetadata(checkResult.getMetadata());
-    return authResult;
+    return Future.succeededFuture(authResult);
   }
 
   @Override
-  public boolean updateLogin(JsonObject credentials, JsonObject metadata) {
+  public Future<Boolean> updateLogin(JsonObject credentials, JsonObject metadata) {
     fileLock.lock();
     try {
       if(users == null) {
@@ -152,16 +156,16 @@ public class FlatFileAuthStore implements AuthStore {
           jOb.put("metadata", metadata);
         }
         serializeFile();
-        return true;
+        return Future.succeededFuture(new Boolean(true));
       }
     } finally {
       fileLock.unlock();
     }
-    return false;
+    return Future.succeededFuture(new Boolean(false));
   }
 
   @Override
-  public boolean removeLogin(JsonObject credentials) {
+  public Future<Boolean> removeLogin(JsonObject credentials) {
     fileLock.lock();
     try {
       if(users == null) {
@@ -174,17 +178,17 @@ public class FlatFileAuthStore implements AuthStore {
         }
         users.remove(jOb);
         serializeFile();
-        return true;
+        return Future.succeededFuture(new Boolean(true));
       }
       System.out.println("Unable to locate " + credentials.getString("username") + " in users list");
-      return false;
+      return Future.succeededFuture(new Boolean(false));
     } finally {
       fileLock.unlock();
     }
   }
 
   @Override
-  public boolean addLogin(JsonObject credentials, JsonObject metadata) {
+  public Future<Boolean> addLogin(JsonObject credentials, JsonObject metadata) {
     fileLock.lock();
     try {
       if(this.users == null) {
@@ -194,7 +198,7 @@ public class FlatFileAuthStore implements AuthStore {
         JsonObject jOb = (JsonObject)ob;
         if(jOb.containsKey("username") && jOb.getString("username").equals(credentials.getString("username"))) {
           System.out.println(credentials.getString("username") + " already exists.");
-          return false; //Name already exists
+          return Future.succeededFuture(new Boolean(false)); //Name already exists
         }
       }
       String salt = authUtil.getSalt();
@@ -206,14 +210,14 @@ public class FlatFileAuthStore implements AuthStore {
       newUser.put("metadata", metadata);
       this.users.add(newUser);
       serializeFile();
-      return true;
+      return Future.succeededFuture(new Boolean(true));
     } finally {
       fileLock.unlock();
     }
   }
 
   @Override
-  public JsonObject getMetadata(JsonObject credentials) {
+  public Future<JsonObject> getMetadata(JsonObject credentials) {
     fileLock.lock();
     String username = credentials.getString("username");
     try {
@@ -225,9 +229,9 @@ public class FlatFileAuthStore implements AuthStore {
         if(!jOb.containsKey("username") || !jOb.getString("username").equals(username)) {
           continue;
         }
-        return jOb.getJsonObject("metadata");
+        return Future.succeededFuture(jOb.getJsonObject("metadata"));
       }
-      return null;
+      return Future.succeededFuture(null);
     } finally {
       fileLock.unlock();
     }
