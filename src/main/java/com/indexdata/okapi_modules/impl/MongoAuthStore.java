@@ -26,6 +26,14 @@ public class MongoAuthStore implements AuthStore {
     this.mongoClient = mongoClient;
     this.authParams = authParams;
   }
+  
+  private String calculateHash(String password, String salt) {
+    return authUtil.calculateHash(password, salt, 
+            authParams.getString("algorithm"),
+            authParams.getInteger("iterations"),
+            authParams.getInteger("keyLength")
+    );
+  }
 
   @Override
   public Future<AuthResult> verifyLogin(JsonObject credentials) {
@@ -37,13 +45,8 @@ public class MongoAuthStore implements AuthStore {
         JsonObject user = res.result().get(0);
         String storedHash = user.getString("hash");
         String storedSalt = user.getString("salt");
-        String calculatedHash = authUtil.calculateHash(
-                credentials.getString("password"),
-                storedSalt,
-                authParams.getString("algorithm"),
-                authParams.getInteger("iterations"),
-                authParams.getInteger("keyLength")     
-        );
+        String calculatedHash = calculateHash(credentials.getString("password"),
+          storedSalt);
         if(calculatedHash.equals(storedHash)) {
           future.complete(new AuthResult(true, user.getJsonObject("metadata")));
         } else {
@@ -59,22 +62,87 @@ public class MongoAuthStore implements AuthStore {
 
   @Override
   public Future<Boolean> updateLogin(JsonObject credentials, JsonObject metadata) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Future<Boolean> future = Future.future();
+    String username = credentials.getString("username");
+    String password = credentials.getString("password");
+    JsonObject query = new JsonObject().put("username", username);
+    String newSalt = authUtil.getSalt();
+    String newHash = calculateHash(password, newSalt);
+    JsonObject update = new JsonObject()
+            .put("salt", newSalt)
+            .put("hash", newHash);
+    if(metadata != null) {
+      update.put("metadata", metadata);
+    }
+    mongoClient.update("users", query, update, res -> {
+      if(res.succeeded()) {
+        future.complete(Boolean.TRUE);
+      } else {
+        future.complete(Boolean.FALSE);
+      }
+    });
+    
+    return future;
   }
 
   @Override
   public Future<Boolean> removeLogin(JsonObject credentials) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Future<Boolean> future = Future.future();
+    String username = credentials.getString("username");
+    JsonObject query = new JsonObject().put("username", username);
+    mongoClient.remove("users", query, res -> {
+      if(res.succeeded()) {
+        future.complete(Boolean.TRUE);
+      } else {
+        future.complete(Boolean.FALSE);
+      }
+    }); 
+    return future;
   }
 
   @Override
   public Future<Boolean> addLogin(JsonObject credentials, JsonObject metadata) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Future<Boolean> future = Future.future();
+    String username = credentials.getString("username");
+    String password = credentials.getString("password");
+    JsonObject query = new JsonObject().put("username", username);
+    mongoClient.find("users", query, res -> {
+      if(res.succeeded()) {
+        //username already exists!
+        future.complete(Boolean.FALSE);
+      } else {
+        String newSalt = authUtil.getSalt();
+        String newHash = calculateHash(username, password);
+        JsonObject insert = new JsonObject()
+                .put("username", username)
+                .put("password", password)
+                .put("metadata", metadata);
+        mongoClient.insert("users", insert, res2 -> {
+          if(res2.succeeded()) {
+            future.complete(Boolean.TRUE);
+          } else {
+            future.complete(Boolean.FALSE);
+          }
+        });     
+      }
+    });
+    return future;
   }
 
   @Override
   public Future<JsonObject> getMetadata(JsonObject credentials) {
-    throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    Future<JsonObject> future = Future.future();
+    String username = credentials.getString("username");
+    JsonObject query = new JsonObject().put("username", username);
+    mongoClient.find("users", query, res -> {
+      if(res.succeeded()) {
+        future.complete(res.result().get(0).getJsonObject("metadata"));
+      } else {
+        future.complete(null);
+      }
+    });
+    
+    return future;
   }
   
 }
