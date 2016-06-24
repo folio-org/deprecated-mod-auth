@@ -8,14 +8,8 @@ package com.indexdata.okapi_modules;
 import com.indexdata.okapi_modules.impl.MongoAuthStore;
 import io.vertx.core.json.JsonObject;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-//import com.mongodb.MongoClient;
-
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
-import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.ext.mongo.MongoClient;
@@ -29,7 +23,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import de.flapdoodle.embed.mongo.config.ArtifactStoreBuilder;
 import de.flapdoodle.embed.mongo.MongodStarter;
 import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
@@ -76,12 +69,9 @@ public class MongoAuthStoreTest {
     final Async async = context.async();
     JsonObject mongoConfig = new JsonObject();
     String host = "localhost";
-    //mongoConfig.put("port", MONGO_PORT);
-    //mongoConfig.put("host", host);
     mongoConfig.put("connection_string", "mongodb://localhost:" + MONGO_PORT);
     mongoConfig.put("db_name", "test_db");
    
-    //mongoConfig.put("db_name", mongoDB.getName());
     vertx = Vertx.vertx();
     mongoClient = MongoClient.createShared(vertx, mongoConfig);
     credentials = new JsonObject()
@@ -109,7 +99,6 @@ public class MongoAuthStoreTest {
         async.complete();
       } else {
         context.fail();
-        //throw new RuntimeException("Error inserting basic user");
       }
     });    
   }

@@ -2,6 +2,7 @@ package com.indexdata.okapi_modules;
 
 import com.indexdata.okapi_modules.impl.DummyAuthStore;
 import com.indexdata.okapi_modules.impl.FlatFileAuthStore;
+import com.indexdata.okapi_modules.impl.MongoAuthStore;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
@@ -25,6 +26,7 @@ import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.JwtParser;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpServerRequest;
+import io.vertx.ext.mongo.MongoClient;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.Key;
@@ -41,10 +43,12 @@ public class MainVerticle extends AbstractVerticle {
   private final Long expires = 600L;
   private final TokenStore tokenStore = new DummyTokenStore();
   private final Logger logger = LoggerFactory.getLogger("auth_module");
-  private final String PERMISSIONS_HEADER = "X-Okapi-Permissions";
-  private final String ADD_USER_PERMISSION = "auth_add_user";
-  private final String UPDATE_USER_PERMISSION = "auth_update_user";
-  private final String DELETE_USER_PERMISSION = "auth_delete_user";
+  private static final String PERMISSIONS_HEADER = "X-Okapi-Permissions";
+  private static final String ADD_USER_PERMISSION = "auth_add_user";
+  private static final String UPDATE_USER_PERMISSION = "auth_update_user";
+  private static final String DELETE_USER_PERMISSION = "auth_delete_user";
+  private static final String DESIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Desired";
+  private static final String REQUIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Required";
   
   private Key key = MacProvider.generateKey();
   
@@ -83,6 +87,10 @@ public class MainVerticle extends AbstractVerticle {
       }
       System.out.println("Using '" + authSecretsPath + "' for user secrets");
       authStore = new FlatFileAuthStore(authSecretsPath, authParams);
+    } else if(authStoreChoice.equals("mongo")) {
+      String mongoURL = System.getProperty("mongoURL", "mongodb://localhost:27017");
+      MongoClient mongoClient = MongoClient.createShared(vertx, new JsonObject().put("connection_string", mongoURL));
+      authStore = new MongoAuthStore(mongoClient, authParams);
     } else {
       authStore = new DummyAuthStore();
     }
@@ -102,6 +110,8 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/token").handler(this::handleCreateToken);
     router.route("/user").handler(BodyHandler.create());
     router.delete("/user/:username").handler(this::handleUser);
+    router.put("/user/:username").handler(BodyHandler.create());
+    router.put("/user/:username").handler(this::handleUser);
     router.route("/user").handler(this::handleUser);
     router.route("/*").handler(this::handleAuth);
     router.post("/expire").handler(BodyHandler.create());
@@ -126,10 +136,7 @@ public class MainVerticle extends AbstractVerticle {
     String authHeader = request.headers().get("Authorization");
     String authToken = authUtil.extractToken(authHeader);
     if(authToken == null) {
-      //ctx.response().putHeader("Content-Type", "text/plain");
       result.put("errorCode", 400);
-      //ctx.response().setStatusCode(400);
-      //ctx.response().end("No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
       result.put("message", "No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
       return result;
     }
@@ -137,15 +144,9 @@ public class MainVerticle extends AbstractVerticle {
     if(tokenStore.hasToken(authToken, "expired")) {
       result.put("errorCode", 400);
       result.put("message", "Token is expired.");
-      /*
-        ctx.response()
-          .setStatusCode(400)
-          .setStatusMessage("Token is expired")
-          .end();
-      */
       return result;
     }
-    //JsonObject authInfo = new JsonObject().put("jwt", authToken);
+
     JwtParser parser = null;
     try {
       parser = Jwts.parser().setSigningKey(key);
@@ -154,11 +155,6 @@ public class MainVerticle extends AbstractVerticle {
         logger.debug("JWT auth did not succeed");
         result.put("errorCode", 400);
         result.put("message", "Invalid token.");
-        /*
-        ctx.response().setStatusCode(400)
-          .putHeader("Content-Type", "text/plain")
-          .end("Invalid token");
-        */
         System.out.println(authToken + " is not valid");
         return result;
     }
@@ -172,7 +168,6 @@ public class MainVerticle extends AbstractVerticle {
     //If we have a list of permissions stored for this username, assign them as a header
     if(metadata != null && permissions != null) {
       System.out.println("Assigning metadata header containing: " + permissions.encode());
-      //ctx.response().putHeader(PERMISSIONS_HEADER, permissions.encode());
       result.getJsonObject("headers").put(PERMISSIONS_HEADER, permissions.encode());
     } else {
       System.out.println("No permission header assigned for request");
@@ -193,11 +188,42 @@ public class MainVerticle extends AbstractVerticle {
   private void handleAuth(RoutingContext ctx) {
     System.out.println("Calling handleAuth");
     JsonObject authResult = this.checkAuthRequest(ctx.request());
+    JsonArray permissionsRequired = new JsonArray();
+    //JsonArray permissionsDesired;
+    
+    /*
+    for(String name : ctx.request().headers().names()) {
+      String value = ctx.request().headers().get(name);
+      System.out.println("Request has header '" + name + "' with value '" + value + "'");
+    }
+    */
+    if(ctx.request().headers().contains(REQUIRED_PERMISSIONS_HEADER)) {
+      String permissionsString = ctx.request().headers().get(REQUIRED_PERMISSIONS_HEADER);
+      for(String entry : permissionsString.split(",")) {
+        permissionsRequired.add(entry);
+      }
+    }
+    
     if(authResult.containsKey("errorCode")) {
       ctx.response().putHeader("Content-Type", "text/plain");
       ctx.response().setStatusCode(authResult.getInteger("errorCode"));
       ctx.response().end(authResult.getString("message"));    
       return;
+    }
+    System.out.println("authResult is " + authResult.encode());
+    System.out.println("Checking for required permissions: " + permissionsRequired.encode());
+    for(Object o : permissionsRequired) {
+      JsonArray providedPermissions = null;
+      if(authResult.getJsonObject("headers").containsKey(PERMISSIONS_HEADER)) {
+        providedPermissions = new JsonArray(authResult.getJsonObject("headers").getString(PERMISSIONS_HEADER));
+      }
+      if(providedPermissions == null || !providedPermissions.contains((String)o)) {
+        ctx.response()
+                .putHeader("Content-Type", "text/plain")
+                .setStatusCode(403)
+                .end("Access requires permission: " + (String)o);
+        return;
+      }
     }
     
     //Assuming that all is well, switch to chunked and return the content
@@ -278,8 +304,7 @@ public class MainVerticle extends AbstractVerticle {
     if(authToken == null) {
       ctx.response()
         .setStatusCode(400)
-        .setStatusMessage("No valid JWT token found.")
-        .end();
+        .end("No valid JWT token found.");
       return;
     }
     /*
@@ -295,7 +320,7 @@ public class MainVerticle extends AbstractVerticle {
       json = new JsonObject(postContent);
     } catch(DecodeException dex) {
       ctx.response().setStatusCode(400);
-      ctx.response().setStatusMessage("Unable to decode payload as valid JSON").end();
+      ctx.response().setStatusMessage("Unable to decode payload as valid JSON object").end();
       return;
     }
     if(!json.containsKey("token")) {
@@ -386,6 +411,13 @@ public class MainVerticle extends AbstractVerticle {
     } else if(ctx.request().method() == HttpMethod.PUT) {
       if(permissions == null || !permissions.contains(UPDATE_USER_PERMISSION)) {
         ctx.response().setStatusCode(401).setStatusMessage("You do not have permission to modify users").end();
+        return;
+      }
+      String username = ctx.request().getParam("username");
+      if(!username.equals(postJson.getJsonObject("credentials").getString("username"))) {
+        ctx.response()
+                .setStatusCode(400)
+                .end("Username in credentials does not match named user");
         return;
       }
       boolean success = authStore.updateLogin(postJson.getJsonObject("credentials"), postJson.getJsonObject("metadata")).result();

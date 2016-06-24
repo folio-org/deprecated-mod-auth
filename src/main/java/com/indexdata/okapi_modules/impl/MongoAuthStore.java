@@ -64,13 +64,16 @@ public class MongoAuthStore implements AuthStore {
   public Future<Boolean> updateLogin(JsonObject credentials, JsonObject metadata) {
     Future<Boolean> future = Future.future();
     String username = credentials.getString("username");
-    String password = credentials.getString("password");
     JsonObject query = new JsonObject().put("username", username);
+    JsonObject update = new JsonObject();
     String newSalt = authUtil.getSalt();
-    String newHash = calculateHash(password, newSalt);
-    JsonObject update = new JsonObject()
+    if(credentials.containsKey("password")) {
+      String password = credentials.getString("password");
+      String newHash = calculateHash(password, newSalt);
+      update
             .put("salt", newSalt)
             .put("hash", newHash);
+    }
     if(metadata != null) {
       update.put("metadata", metadata);
     }

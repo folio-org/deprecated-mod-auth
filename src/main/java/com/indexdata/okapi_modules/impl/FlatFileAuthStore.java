@@ -148,10 +148,12 @@ public class FlatFileAuthStore implements AuthStore {
           continue;
         }
         jOb.put("username",credentials.getString("username"));
-        String newSalt = authUtil.getSalt();
-        String newHash = this.calculateHash(credentials.getString("password"), newSalt);
-        jOb.put("salt", newSalt);
-        jOb.put("hash", newHash);
+        if(credentials.containsKey("password")) {
+          String newSalt = authUtil.getSalt();
+          String newHash = this.calculateHash(credentials.getString("password"), newSalt);
+          jOb.put("salt", newSalt);
+          jOb.put("hash", newHash);
+        }
         if(metadata != null) {
           jOb.put("metadata", metadata);
         }
