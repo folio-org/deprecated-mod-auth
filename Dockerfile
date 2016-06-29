@@ -6,7 +6,8 @@
 #   docker run -t -i -p 8080:8081 indexdata/okapi-sample-module
 ###
 
-FROM java:8
+#FROM java:8
+FROM cantara/alpine-openjdk-jdk8
 
 ENV VERTICLE_FILE auth-prototype-fat.jar
 

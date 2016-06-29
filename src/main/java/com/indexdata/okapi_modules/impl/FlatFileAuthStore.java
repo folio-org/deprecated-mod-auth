@@ -79,24 +79,7 @@ public class FlatFileAuthStore implements AuthStore {
       fileLock.unlock();
     }
   }
- /* 
-  private JsonArray deserializeFile() {
-    JsonArray users = null;
-    fileLock.lock();
-    try{
-      try {
-        String userdata = new String(Files.readAllBytes(Paths.get(secretsFilepath)));
-        users = new JsonArray(userdata);      
-      } catch(IOException e) {
-        throw new RuntimeException(e);
-      }
-    } finally {
-      fileLock.unlock();
-    }
-    return users;
-  }
-  */
-  
+
   private void deserializeFile() {
     try {
       String userdata = new String(Files.readAllBytes(Paths.get(secretsFilepath)));
@@ -138,16 +121,17 @@ public class FlatFileAuthStore implements AuthStore {
   @Override
   public Future<Boolean> updateLogin(JsonObject credentials, JsonObject metadata) {
     fileLock.lock();
+    String username = credentials.getString("username");
     try {
-      if(users == null) {
+      if(this.users == null) {
         deserializeFile();
       }
-      for(Object ob : users) {
+      for(Object ob : this.users) {
         JsonObject jOb = (JsonObject)ob;
-        if(!jOb.containsKey("username") || !jOb.getString("username").equals(credentials.getString("username"))) {
+        if(!jOb.containsKey("username") || !jOb.getString("username").equals(username)) {
           continue;
         }
-        jOb.put("username",credentials.getString("username"));
+        //jOb.put("username",credentials.getString("username"));
         if(credentials.containsKey("password")) {
           String newSalt = authUtil.getSalt();
           String newHash = this.calculateHash(credentials.getString("password"), newSalt);
@@ -163,6 +147,7 @@ public class FlatFileAuthStore implements AuthStore {
     } finally {
       fileLock.unlock();
     }
+    System.out.println("Unable to locate user " + username + " to update");
     return Future.succeededFuture(new Boolean(false));
   }
 

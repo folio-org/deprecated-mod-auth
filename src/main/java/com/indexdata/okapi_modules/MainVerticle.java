@@ -275,7 +275,7 @@ public class MainVerticle extends AbstractVerticle {
     }
     if(!authStore.verifyLogin(json).result().getSuccess()) {
         ctx.response().setStatusCode(403);
-        ctx.response().setStatusMessage("Invalid credentials").end();
+        ctx.response().end("Invalid credentials");
         return;
     }
     ctx.response().setStatusCode(200);
