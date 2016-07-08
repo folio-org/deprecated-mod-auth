@@ -1,13 +1,5 @@
-###
-# vert.x docker example using a Java verticle packaged as a fatjar
-# To build:
-#  docker build -t indexdata/okapi-sample-module .
-# To run:
-#   docker run -t -i -p 8080:8081 indexdata/okapi-sample-module
-###
-
-#FROM java:8
-FROM cantara/alpine-openjdk-jdk8
+FROM alpine:latest
+RUN apk --update add openjdk8-jre && rm /var/cache/apk/*
 
 ENV VERTICLE_FILE auth-prototype-fat.jar
 
