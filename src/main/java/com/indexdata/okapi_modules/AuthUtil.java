@@ -30,6 +30,9 @@ public class AuthUtil {
     return null;
   }
   
+  /*
+   * Obtain a hash value based on a provided user password
+   */
   public String calculateHash(String password, String salt, String algorithm, int iterations, int keyLength) {
     //public String calculateHash(String password, String salt) {
     PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), DatatypeConverter.parseHexBinary(salt), iterations, keyLength);
