@@ -1,5 +1,7 @@
+package com.indexdata.authorization_module;
 
 import com.indexdata.authorization_module.PermissionsSource;
+import com.indexdata.authorization_module.impl.DummySource;
 import com.sun.xml.internal.messaging.saaj.util.Base64;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -40,18 +42,25 @@ public class MainVerticle extends AbstractVerticle {
   private static final String PERMISSIONS_HEADER = "X-Okapi-Permissions";
   private static final String DESIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Desired";
   private static final String REQUIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Required";
+  private static final String MODULE_PERMISSIONS_HEADER = "X-Okapi-Module-Permissions";
+  private static final String CALLING_MODULE_HEADER = "X-Okapi-Calling-Module";
   
   private Key JWTSigningKey = MacProvider.generateKey(JWTAlgorithm);
   private static final SignatureAlgorithm JWTAlgorithm = SignatureAlgorithm.HS512;
   PermissionsSource permissionsSource;
+  private String authApiKey;
  
   public void start(Future<Void> future) {
     Router router = Router.router(vertx);
     HttpServer server = vertx.createHttpServer();
+    authApiKey = System.getProperty("auth.api.key", "VERY_WEAK_KEY");
+    
     String keySetting = System.getProperty("jwt.signing.key");
     if(keySetting != null) {
       JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
     }
+    /* TODO: Add configuration options for real permissions source */
+    permissionsSource = new DummySource();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
     
     router.route("/token").handler(BodyHandler.create());
@@ -136,8 +145,18 @@ public class MainVerticle extends AbstractVerticle {
     
     //get user permissions
     JsonArray permissions = permissionsSource.getPermissionsForUser(username, tenant);
-    
+    JsonObject moduleTokens = new JsonObject();
     /* TODO get module permissions (if they exist) */
+    if(ctx.request().headers().contains(MODULE_PERMISSIONS_HEADER)) {
+      JsonObject modulePermissions = new JsonObject(ctx.request().headers().get(MODULE_PERMISSIONS_HEADER));
+      for(String moduleName : modulePermissions.fieldNames()) {
+        JsonArray permissionList = modulePermissions.getJsonArray(moduleName);
+        JsonObject tokenPayload = new JsonObject();
+        tokenPayload.put("sub", username);
+        tokenPayload.put("tenant", tenant);
+        tokenPayload.put("module", moduleName);
+     }
+    }
     
     //Populate the permissionsRequired array from the header
     JsonArray permissionsRequired = new JsonArray();
@@ -180,10 +199,23 @@ public class MainVerticle extends AbstractVerticle {
       permissions.remove(o);
     }
     
+    //Create new JWT to pass back with request, include calling module field
+    JsonObject claims = getClaims(authToken);
+    
+    if(ctx.request().headers().contains(CALLING_MODULE_HEADER)) {
+      claims.put("calling_module", ctx.request().headers().get(CALLING_MODULE_HEADER));
+    }
+    
+    String token = Jwts.builder()
+            .signWith(JWTAlgorithm, JWTSigningKey)
+            .setPayload(claims.encode())
+            .compact();
+    
     //Return header containing relevant permissions
     ctx.response().setChunked(true)
             .setStatusCode(202)
             .putHeader(PERMISSIONS_HEADER, permissions.encode())
+            .putHeader("Authorization", "Bearer " + token)
             .end(ctx.getBodyAsString());
     return;
   }
