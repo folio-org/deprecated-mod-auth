@@ -1,0 +1,4 @@
+com/indexdata/authentication_module/MainVerticle.class
+com/indexdata/authentication_module/impl/DummyAuthSource.class
+com/indexdata/authentication_module/AuthSource.class
+com/indexdata/authentication_module/AuthResult.class
