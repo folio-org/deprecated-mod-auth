@@ -102,14 +102,19 @@ public class MainVerticle extends AbstractVerticle {
                 .end("Payload must contain a 'sub' field");
         return;
       }
-      Map<String, Object> claims = new HashMap<>();
+
       String tenant = ctx.request().headers().get("X-Okapi-Tenant");
+      /*
       claims.put("tenant", tenant);
       String token = Jwts.builder()
               .signWith(JWTAlgorithm, JWTSigningKey)
               .setClaims(claims)
               .setSubject(payload.getString("sub"))
               .compact();
+      */
+      payload.put("tenant", tenant);
+      String token = createToken(payload);
+      
       ctx.response().setStatusCode(200)
               .putHeader("Authorization", "Bearer " + token)
               .end(postContent);
@@ -155,6 +160,7 @@ public class MainVerticle extends AbstractVerticle {
         tokenPayload.put("sub", username);
         tokenPayload.put("tenant", tenant);
         tokenPayload.put("module", moduleName);
+        tokenPayload.put("module_permissions", permissionList);
      }
     }
     
@@ -237,6 +243,14 @@ public class MainVerticle extends AbstractVerticle {
     String encodedJson = jwt.split("\\.")[1];
     String decodedJson = Base64.base64Decode(encodedJson);
     return new JsonObject(decodedJson);    
+  }
+  
+  private String createToken(JsonObject payload) {
+    String token = Jwts.builder()
+              .signWith(JWTAlgorithm, JWTSigningKey)
+              .setPayload(payload.encode())
+              .compact();
+    return token;
   }
   
 }
