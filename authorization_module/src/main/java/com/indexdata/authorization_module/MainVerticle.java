@@ -44,6 +44,7 @@ public class MainVerticle extends AbstractVerticle {
   private static final String REQUIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Required";
   private static final String MODULE_PERMISSIONS_HEADER = "X-Okapi-Module-Permissions";
   private static final String CALLING_MODULE_HEADER = "X-Okapi-Calling-Module";
+  private static final String MODULE_TOKENS_HEADER = "X-Okapi-Module-Tokens";
   
   private Key JWTSigningKey = MacProvider.generateKey(JWTAlgorithm);
   private static final SignatureAlgorithm JWTAlgorithm = SignatureAlgorithm.HS512;
@@ -161,6 +162,8 @@ public class MainVerticle extends AbstractVerticle {
         tokenPayload.put("tenant", tenant);
         tokenPayload.put("module", moduleName);
         tokenPayload.put("module_permissions", permissionList);
+        String moduleToken = createToken(tokenPayload);
+        moduleTokens.put(moduleName, moduleToken);
      }
     }
     
@@ -221,6 +224,7 @@ public class MainVerticle extends AbstractVerticle {
     ctx.response().setChunked(true)
             .setStatusCode(202)
             .putHeader(PERMISSIONS_HEADER, permissions.encode())
+            .putHeader(MODULE_TOKENS_HEADER, moduleTokens.encode())
             .putHeader("Authorization", "Bearer " + token)
             .end(ctx.getBodyAsString());
     return;
