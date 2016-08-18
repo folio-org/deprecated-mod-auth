@@ -5,6 +5,7 @@
  */
 package com.indexdata.authorization_module;
 
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 
 /**
@@ -13,6 +14,6 @@ import io.vertx.core.json.JsonArray;
  */
 public interface PermissionsSource {
   
-  JsonArray getPermissionsForUser(String username, String tenant);
+  Future<JsonArray> getPermissionsForUser(String username);
   
 }

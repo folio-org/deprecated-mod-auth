@@ -2,6 +2,7 @@ package com.indexdata.authorization_module;
 
 import com.indexdata.authorization_module.PermissionsSource;
 import com.indexdata.authorization_module.impl.DummySource;
+import com.indexdata.authorization_module.impl.ModulePermissionsSource;
 import com.sun.xml.internal.messaging.saaj.util.Base64;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -45,11 +46,13 @@ public class MainVerticle extends AbstractVerticle {
   private static final String MODULE_PERMISSIONS_HEADER = "X-Okapi-Module-Permissions";
   private static final String CALLING_MODULE_HEADER = "X-Okapi-Calling-Module";
   private static final String MODULE_TOKENS_HEADER = "X-Okapi-Module-Tokens";
+  private static final String OKAPI_URL_HEADER = "X-Okapi-URL";
   
   private Key JWTSigningKey = MacProvider.generateKey(JWTAlgorithm);
   private static final SignatureAlgorithm JWTAlgorithm = SignatureAlgorithm.HS512;
-  PermissionsSource permissionsSource;
+  ModulePermissionsSource permissionsSource;
   private String authApiKey;
+  private String okapiUrl;
  
   public void start(Future<Void> future) {
     Router router = Router.router(vertx);
@@ -61,7 +64,7 @@ public class MainVerticle extends AbstractVerticle {
       JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
     }
     /* TODO: Add configuration options for real permissions source */
-    permissionsSource = new DummySource();
+    permissionsSource = new ModulePermissionsSource(vertx);
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
     
     router.route("/token").handler(BodyHandler.create());
@@ -79,6 +82,7 @@ public class MainVerticle extends AbstractVerticle {
   }
   
   private void handleToken(RoutingContext ctx) {
+    updateOkapiUrl(ctx);
     if(ctx.request().method() == HttpMethod.POST) {
       final String postContent = ctx.getBodyAsString();
       JsonObject json = null;
@@ -128,6 +132,7 @@ public class MainVerticle extends AbstractVerticle {
   }  
   
   private void handleAuthorize(RoutingContext ctx) {
+    updateOkapiUrl(ctx);
     String authHeader = ctx.request().headers().get("Authorization");
     String authToken = extractToken(authHeader);
     if(authToken == null) {
@@ -150,7 +155,8 @@ public class MainVerticle extends AbstractVerticle {
     String tenant = ctx.request().headers().get("X-Okapi-Tenant");
     
     //get user permissions
-    JsonArray permissions = permissionsSource.getPermissionsForUser(username, tenant);
+    //JsonArray permissions = 
+    
     JsonObject moduleTokens = new JsonObject();
     /* TODO get module permissions (if they exist) */
     if(ctx.request().headers().contains(MODULE_PERMISSIONS_HEADER)) {
@@ -185,49 +191,65 @@ public class MainVerticle extends AbstractVerticle {
       }
     }
     
-    //Check that for all required permissions, we have them
-    for(Object o : permissionsRequired) {
-      if(!permissions.contains((String)o)) {
-        ctx.response()
-                .putHeader("Content-Type", "text/plain")
-                .setStatusCode(403)
-                .end("Access requires permission: " + (String)o);
+    permissionsSource.getPermissionsForUser(username).setHandler(res -> {
+      
+      if(!res.succeeded()) {
+        ctx.fail(res.cause());
         return;
       }
-    }
-    
-    //Remove all permissions not listed in permissionsRequired or permissionsDesired
-    List<Object> deleteList = new ArrayList<>();
-    for(Object o : permissions) {
-      if(!permissionsRequired.contains(o) && !permissionsDesired.contains(o)) {
-        deleteList.add(o);
+      JsonArray permissions = res.result();
+      
+      //Check that for all required permissions, we have them
+      for(Object o : permissionsRequired) {
+        if(!permissions.contains((String)o)) {
+          ctx.response()
+                  .putHeader("Content-Type", "text/plain")
+                  .setStatusCode(403)
+                  .end("Access requires permission: " + (String)o);
+          return;
+        }
       }
+
+      //Remove all permissions not listed in permissionsRequired or permissionsDesired
+      List<Object> deleteList = new ArrayList<>();
+      for(Object o : permissions) {
+        if(!permissionsRequired.contains(o) && !permissionsDesired.contains(o)) {
+          deleteList.add(o);
+        }
+      }
+
+      for(Object o : deleteList) {
+        permissions.remove(o);
+      }
+
+      //Create new JWT to pass back with request, include calling module field
+      JsonObject claims = getClaims(authToken);
+
+      if(ctx.request().headers().contains(CALLING_MODULE_HEADER)) {
+        claims.put("calling_module", ctx.request().headers().get(CALLING_MODULE_HEADER));
+      }
+
+      String token = Jwts.builder()
+              .signWith(JWTAlgorithm, JWTSigningKey)
+              .setPayload(claims.encode())
+              .compact();
+
+      //Return header containing relevant permissions
+      ctx.response().setChunked(true)
+              .setStatusCode(202)
+              .putHeader(PERMISSIONS_HEADER, permissions.encode())
+              .putHeader(MODULE_TOKENS_HEADER, moduleTokens.encode())
+              .putHeader("Authorization", "Bearer " + token)
+              .end(ctx.getBodyAsString());
+      return;
+    });
+  }
+  
+  private void updateOkapiUrl(RoutingContext ctx) {
+    if(ctx.request().getHeader(OKAPI_URL_HEADER) != null) {
+      this.okapiUrl = ctx.request().getHeader(OKAPI_URL_HEADER);
     }
-    
-    for(Object o : deleteList) {
-      permissions.remove(o);
-    }
-    
-    //Create new JWT to pass back with request, include calling module field
-    JsonObject claims = getClaims(authToken);
-    
-    if(ctx.request().headers().contains(CALLING_MODULE_HEADER)) {
-      claims.put("calling_module", ctx.request().headers().get(CALLING_MODULE_HEADER));
-    }
-    
-    String token = Jwts.builder()
-            .signWith(JWTAlgorithm, JWTSigningKey)
-            .setPayload(claims.encode())
-            .compact();
-    
-    //Return header containing relevant permissions
-    ctx.response().setChunked(true)
-            .setStatusCode(202)
-            .putHeader(PERMISSIONS_HEADER, permissions.encode())
-            .putHeader(MODULE_TOKENS_HEADER, moduleTokens.encode())
-            .putHeader("Authorization", "Bearer " + token)
-            .end(ctx.getBodyAsString());
-    return;
+    permissionsSource.setOkapiUrl(okapiUrl);
   }
   
   public String extractToken(String authorizationHeader) {

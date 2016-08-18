@@ -51,6 +51,11 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.post("/login").handler(BodyHandler.create()); //Allow us to read the POST data
     router.post("/login").handler(this::handleLogin);
+    router.route("/user").handler(BodyHandler.create());
+    router.post("/user").handler(this::handleUser);
+    router.put("/user/:username").handler(this::handleUser);
+    router.delete("/user/:username").handler(this::handleUser);
+    
     HttpServer server = vertx.createHttpServer();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
     server.requestHandler(router::accept).listen(port, result -> {
@@ -94,6 +99,70 @@ public class MainVerticle extends AbstractVerticle {
     });
   }
   
+  private void handleUser(RoutingContext ctx) {
+    String requestBody;
+    if(ctx.request().method() == HttpMethod.POST ||
+            ctx.request().method() == HttpMethod.PUT) {
+      requestBody = ctx.getBodyAsString();
+    }
+    if(ctx.request().method() == HttpMethod.POST) {
+      JsonObject postData = new JsonObject(requestBody);
+      JsonObject credentials = postData.getJsonObject("credentials");
+      JsonObject metadata = postData.getJsonObject("metadata");
+      authSource.addAuth(credentials, metadata).setHandler(res-> {
+        if(!res.succeeded()) {
+          ctx.response()
+                  .setStatusCode(500)
+                  .end("Unable to add user");
+        } else {
+          ctx.response()
+                  .setStatusCode(201)
+                  .end("Added user");
+        }
+      });
+      
+    } else if (ctx.request().method() == HttpMethod.PUT) {
+      String username = ctx.request().getParam("username");
+      JsonObject postData = new JsonObject(requestBody);
+      JsonObject credentials = postData.getJsonObject("credentials");
+      JsonObject metadata = postData.getJsonObject("metadata");
+      if(!credentials.getString("username").equals(username)) {
+        ctx.response()
+                .setStatusCode(400)
+                .end("Invalid user");
+        return;
+      }
+      authSource.updateAuth(credentials, metadata).setHandler(res -> {
+        if(!res.succeeded()) {
+          ctx.response()
+                  .setStatusCode(500)
+                  .end("Unable to update user");
+        } else {
+          ctx.response()
+                  .setStatusCode(200)
+                  .end("Updated user");
+        }
+      });      
+    } else if (ctx.request().method() == HttpMethod.DELETE) {
+      String username = ctx.request().getParam("username");
+      authSource.deleteAuth(username).setHandler(res -> {
+        if(!res.succeeded()) {
+          ctx.response()
+                  .setStatusCode(500)
+                  .end("Unable to remove user");
+        } else {
+          ctx.response()
+                  .setStatusCode(200)
+                  .end("Deleted user");
+        }
+      });
+    } else {
+      ctx.response()
+              .setStatusCode(400)
+              .end("Unsupported operation");
+      return;
+    }
+  }
   /*
   Retrieve a token from our token generator...in this case, the Authorization
   module. We pass along a shared key, since this exists outside of the standard
