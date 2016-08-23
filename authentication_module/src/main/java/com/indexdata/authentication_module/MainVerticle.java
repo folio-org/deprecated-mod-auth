@@ -100,7 +100,7 @@ public class MainVerticle extends AbstractVerticle {
   }
   
   private void handleUser(RoutingContext ctx) {
-    String requestBody;
+    String requestBody = null;
     if(ctx.request().method() == HttpMethod.POST ||
             ctx.request().method() == HttpMethod.PUT) {
       requestBody = ctx.getBodyAsString();

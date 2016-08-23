@@ -10,6 +10,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.impl.crypto.MacProvider;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
@@ -134,12 +135,16 @@ public class MainVerticle extends AbstractVerticle {
   private void handleAuthorize(RoutingContext ctx) {
     updateOkapiUrl(ctx);
     String authHeader = ctx.request().headers().get("Authorization");
-    String authToken = extractToken(authHeader);
-    if(authToken == null) {
-      ctx.response().setStatusCode(400)
-              .end("No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
-      return;
+    String candidateToken = extractToken(authHeader);
+    String tenant = ctx.request().headers().get("X-Okapi-Tenant");
+    if(candidateToken == null) {
+      //Generate a new "dummy" token
+      JsonObject dummyPayload = new JsonObject()
+              .put("sub", "UNDEFINED_USER")
+              .put("tenant", tenant);
+      candidateToken = createToken(dummyPayload);
     }
+    final String authToken = candidateToken;
     JwtParser parser = null;
     try {
       parser = Jwts.parser().setSigningKey(JWTSigningKey);
@@ -152,10 +157,15 @@ public class MainVerticle extends AbstractVerticle {
         return;
     }
     String username = getClaims(authToken).getString("sub");
-    String tenant = ctx.request().headers().get("X-Okapi-Tenant");
+    
+    //Check and see if we have any module permissions defined
+    final JsonArray extraPermissions = getClaims(authToken).getJsonArray("extra_permissions");
+    
     
     //get user permissions
     //JsonArray permissions = 
+    
+    //Instead of storing tokens, let's store an array of objects that each
     
     JsonObject moduleTokens = new JsonObject();
     /* TODO get module permissions (if they exist) */
@@ -167,12 +177,14 @@ public class MainVerticle extends AbstractVerticle {
         tokenPayload.put("sub", username);
         tokenPayload.put("tenant", tenant);
         tokenPayload.put("module", moduleName);
-        tokenPayload.put("module_permissions", permissionList);
+        tokenPayload.put("extra_permissions", permissionList);
         String moduleToken = createToken(tokenPayload);
         moduleTokens.put(moduleName, moduleToken);
      }
     }
     
+    //Add the original token back into the module tokens
+    moduleTokens.put("_", authToken);
     //Populate the permissionsRequired array from the header
     JsonArray permissionsRequired = new JsonArray();
     JsonArray permissionsDesired = new JsonArray();
@@ -191,13 +203,21 @@ public class MainVerticle extends AbstractVerticle {
       }
     }
     
-    permissionsSource.getPermissionsForUser(username).setHandler(res -> {
+    //Retrieve the user permissions and populate the permissions header
+    permissionsSource.getPermissionsForUser(username).setHandler((AsyncResult<JsonArray> res) -> {
       
       if(!res.succeeded()) {
         ctx.fail(res.cause());
         return;
       }
       JsonArray permissions = res.result();
+      
+      if(extraPermissions != null) {
+        for(Object o : extraPermissions)
+        {
+          permissions.add((String)o);
+        }
+      }
       
       //Check that for all required permissions, we have them
       for(Object o : permissionsRequired) {
