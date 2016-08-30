@@ -15,8 +15,8 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.auth.jwt.JWTAuth;
-import io.vertx.ext.auth.jwt.JWTOptions;
+//import io.vertx.ext.auth.jwt.JWTAuth;
+//import io.vertx.ext.auth.jwt.JWTOption;
 import java.nio.file.Paths;
 
 import io.jsonwebtoken.Jwts;
@@ -30,6 +30,8 @@ import io.vertx.ext.mongo.MongoClient;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.security.Key;
+import javax.crypto.spec.SecretKeySpec;
+import javax.xml.bind.DatatypeConverter;
 
 
 public class MainVerticle extends AbstractVerticle {
@@ -38,7 +40,7 @@ public class MainVerticle extends AbstractVerticle {
    * TODO: Find a better way to assign the signing secret. Perhaps in
    * a properties file or some other external configuration option.
    */
-  private final String signingSecret = "all_zombies_must_dance";
+  //private final String signingSecret = "all_zombies_must_dance";
   private final AuthUtil authUtil = new AuthUtil();
   private final Long expires = 600L;
   private final TokenStore tokenStore = new DummyTokenStore();
@@ -49,15 +51,20 @@ public class MainVerticle extends AbstractVerticle {
   private static final String DELETE_USER_PERMISSION = "auth_delete_user";
   private static final String DESIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Desired";
   private static final String REQUIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Required";
+  private static final SignatureAlgorithm JWTAlgorithm = SignatureAlgorithm.HS512;
   
-  private Key key = MacProvider.generateKey();
+  private Key JWTSigningKey = MacProvider.generateKey(JWTAlgorithm);
   
   private AuthStore authStore;
-  private JWTAuth jwtAuth = null;
+  //private JWTAuth jwtAuth = null;
   private boolean standalone = false;
   
   @Override
   public void start(Future<Void> fut) {
+    String keySetting = System.getProperty("jwtSigningKey");
+    if(keySetting != null) {
+      JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
+    }
     String standaloneChoice = System.getProperty("standalone", "false");
     if(standaloneChoice.equals("true")) {
       standalone = true;
@@ -95,14 +102,16 @@ public class MainVerticle extends AbstractVerticle {
       authStore = new DummyAuthStore();
     }
 
+    /*
     JsonObject jwtAuthConfig = new JsonObject()
       .put("keyStore", new JsonObject()
           .put("path", "keystore.jceks") //this resolves relative to our resources/ dir
           .put("type", "jceks")
           .put("password", signingSecret)
       );
+    */
 
-    jwtAuth = JWTAuth.create(vertx, jwtAuthConfig);
+    //jwtAuth = JWTAuth.create(vertx, jwtAuthConfig);
     tokenStore.addStore("expired");
     Router router = Router.router(vertx);
 
@@ -149,7 +158,7 @@ public class MainVerticle extends AbstractVerticle {
 
     JwtParser parser = null;
     try {
-      parser = Jwts.parser().setSigningKey(key);
+      parser = Jwts.parser().setSigningKey(JWTSigningKey);
       parser.parseClaimsJws(authToken);
     } catch (io.jsonwebtoken.MalformedJwtException|SignatureException s) {
         logger.debug("JWT auth did not succeed");
@@ -279,7 +288,7 @@ public class MainVerticle extends AbstractVerticle {
         return;
     }
     ctx.response().setStatusCode(200);
-    String token = Jwts.builder().setSubject(json.getString("username")).signWith(SignatureAlgorithm.HS256, key).compact();
+    String token = Jwts.builder().setSubject(json.getString("username")).signWith(JWTAlgorithm, JWTSigningKey).compact();
     /*
     String token = jwtAuth.generateToken(
         new JsonObject().put("sub", json.getString("username")),
@@ -336,6 +345,22 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
     final String expireToken = json.getString("token");
+    JwtParser parser = null;
+    try {
+      parser = Jwts.parser().setSigningKey(JWTSigningKey);
+      parser.parseClaimsJws(authToken);
+    } catch(io.jsonwebtoken.MalformedJwtException|SignatureException e) {
+      ctx.response()
+              .setStatusCode(403)
+              .end("Denied");
+      return;
+    }
+    ctx.response()
+            .setStatusCode(200)
+            .putHeader("Authorization", "Bearer " + authToken)
+            .end(postContent);
+    tokenStore.addToken(expireToken, "expired");
+    /*
     jwtAuth.authenticate(
         new JsonObject().put("jwt", authToken),
         result -> {
@@ -353,6 +378,7 @@ public class MainVerticle extends AbstractVerticle {
           }
         }
     );
+    */
   }
   
   /*
