@@ -1,3 +1,4 @@
+# mod-auth
 # Authentication and Authorization Modules
 
 ## Authentication
@@ -10,4 +11,5 @@ retrieving the permissions for a given user and making decisions regarding acces
 
 ## Permissions
 This module stores permissions and associations between permissions and users. It also maintains a heirarchy of permissions and sub-permissions, allowing for permissions to act as roles, rather than simple bits. It is used primarily by the Authorization module, though it is possible that some Authentication implementations may have reason to make calls to the Permissions module as well.
+
 
