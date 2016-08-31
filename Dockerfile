@@ -22,5 +22,5 @@ WORKDIR $VERTICLE_HOME
 # Expose this port locally in the container
 EXPOSE 8081
 
-ENTRYPOINT ["sh", "-c"]
-CMD ["java -jar $VERTICLE_FILE"]
+ENTRYPOINT ["java", "-jar", "auth-prototype-fat.jar"]
+CMD []
