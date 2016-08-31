@@ -49,12 +49,12 @@ public class MainVerticle extends AbstractVerticle {
     authSource = new MongoAuthSource(mongoClient, authUtil);
     
     Router router = Router.router(vertx);
-    router.post("/login").handler(BodyHandler.create()); //Allow us to read the POST data
-    router.post("/login").handler(this::handleLogin);
-    router.route("/user").handler(BodyHandler.create());
-    router.post("/user").handler(this::handleUser);
-    router.put("/user/:username").handler(this::handleUser);
-    router.delete("/user/:username").handler(this::handleUser);
+    router.post("/authn/login").handler(BodyHandler.create()); //Allow us to read the POST data
+    router.post("/authn/login").handler(this::handleLogin);
+    router.route("authn/users").handler(BodyHandler.create());
+    router.post("authn/users").handler(this::handleUser);
+    router.put("authn/users/:username").handler(this::handleUser);
+    router.delete("authn/users/:username").handler(this::handleUser);
     
     HttpServer server = vertx.createHttpServer();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));

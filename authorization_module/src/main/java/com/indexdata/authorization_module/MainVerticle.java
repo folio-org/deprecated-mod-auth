@@ -48,6 +48,7 @@ public class MainVerticle extends AbstractVerticle {
   private static final String CALLING_MODULE_HEADER = "X-Okapi-Calling-Module";
   private static final String MODULE_TOKENS_HEADER = "X-Okapi-Module-Tokens";
   private static final String OKAPI_URL_HEADER = "X-Okapi-URL";
+  private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
   
   private Key JWTSigningKey = MacProvider.generateKey(JWTAlgorithm);
   private static final SignatureAlgorithm JWTAlgorithm = SignatureAlgorithm.HS512;
@@ -122,7 +123,8 @@ public class MainVerticle extends AbstractVerticle {
       String token = createToken(payload);
       
       ctx.response().setStatusCode(200)
-              .putHeader("Authorization", "Bearer " + token)
+              //.putHeader("Authorization", "Bearer " + token)
+              .putHeader(OKAPI_TOKEN_HEADER, token)
               .end(postContent);
       return;
     } else {
