@@ -1,3 +1,9 @@
+Copyright (C) 2016 The Open Library Foundation
+
+This software is distributed under the terms of the Apache License,
+Version 2.0. See the file "[LICENSE](LICENSE)" for more information.
+
+
 # mod-auth
 # Authentication and Authorization Modules
 
@@ -11,5 +17,9 @@ retrieving the permissions for a given user and making decisions regarding acces
 
 ## Permissions
 This module stores permissions and associations between permissions and users. It also maintains a heirarchy of permissions and sub-permissions, allowing for permissions to act as roles, rather than simple bits. It is used primarily by the Authorization module, though it is possible that some Authentication implementations may have reason to make calls to the Permissions module as well.
+=======
+## Introduction
+
+Prototype of a JWT auth module for FOLIO
 
 
