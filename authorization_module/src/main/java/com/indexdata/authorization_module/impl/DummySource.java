@@ -6,6 +6,7 @@
 package com.indexdata.authorization_module.impl;
 
 import com.indexdata.authorization_module.PermissionsSource;
+import io.vertx.core.Future;
 import io.vertx.core.json.JsonArray;
 
 /**
@@ -15,8 +16,11 @@ import io.vertx.core.json.JsonArray;
 public class DummySource implements PermissionsSource {
 
   @Override
-  public JsonArray getPermissionsForUser(String username, String tenant) {
-    return new JsonArray(); //To change body of generated methods, choose Tools | Templates.
+  public Future<JsonArray> getPermissionsForUser(String username) {
+    Future<JsonArray> future = Future.future();
+    future.complete(new JsonArray());
+    return future;
   }
+
   
 }
