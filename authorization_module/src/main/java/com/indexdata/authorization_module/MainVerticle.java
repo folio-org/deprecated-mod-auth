@@ -67,9 +67,8 @@ public class MainVerticle extends AbstractVerticle {
       //JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
       JWTSigningKey = new SecretKeySpec(keySetting.getBytes(), JWTAlgorithm.getJcaName());
     }
-    /* TODO: Add configuration options for real permissions source */
-    //permissionsSource = new ModulePermissionsSource(vertx);
-    permissionsSource = new DummyPermissionsSource();
+    permissionsSource = new ModulePermissionsSource(vertx);
+    //permissionsSource = new DummyPermissionsSource();
     permissionsSource.setAuthApiKey(authApiKey);
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
     
