@@ -64,7 +64,8 @@ public class MainVerticle extends AbstractVerticle {
     
     String keySetting = System.getProperty("jwt.signing.key");
     if(keySetting != null) {
-      JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
+      //JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
+      JWTSigningKey = new SecretKeySpec(keySetting.getBytes(), JWTAlgorithm.getJcaName());
     }
     /* TODO: Add configuration options for real permissions source */
     //permissionsSource = new ModulePermissionsSource(vertx);
