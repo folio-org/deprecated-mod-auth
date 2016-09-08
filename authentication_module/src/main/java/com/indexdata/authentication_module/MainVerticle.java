@@ -35,13 +35,14 @@ public class MainVerticle extends AbstractVerticle {
   private AuthUtil authUtil;
   private MongoClient mongoClient;
   private String okapiUrl;
-  private String authApiKey;
+  //private String authApiKey;
+  private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
 
   @Override
   public void start(Future<Void> future) {
     //authSource = new DummyAuthSource();
     authUtil = new AuthUtil();
-    authApiKey = System.getProperty("auth.api.key", "VERY_WEAK_KEY");
+    //authApiKey = System.getProperty("auth.api.key", "VERY_WEAK_KEY");
     okapiUrl = System.getProperty("okapi.url", "http://localhost:9130");
     
     String mongoURL = System.getProperty("mongo.url", "mongodb://localhost:27017");
@@ -51,10 +52,10 @@ public class MainVerticle extends AbstractVerticle {
     Router router = Router.router(vertx);
     router.post("/authn/login").handler(BodyHandler.create()); //Allow us to read the POST data
     router.post("/authn/login").handler(this::handleLogin);
-    router.route("authn/users").handler(BodyHandler.create());
-    router.post("authn/users").handler(this::handleUser);
-    router.put("authn/users/:username").handler(this::handleUser);
-    router.delete("authn/users/:username").handler(this::handleUser);
+    router.route("/authn/users").handler(BodyHandler.create());
+    router.post("/authn/users").handler(this::handleUser);
+    router.put("/authn/users/:username").handler(this::handleUser);
+    router.delete("/authn/users/:username").handler(this::handleUser);
     
     HttpServer server = vertx.createHttpServer();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
@@ -69,6 +70,7 @@ public class MainVerticle extends AbstractVerticle {
   
   private void handleLogin(RoutingContext ctx) {
     final String postContent = ctx.getBodyAsString();
+    String requestToken = getRequestToken(ctx);
     JsonObject json = null;
     try {
       json = new JsonObject(postContent);
@@ -88,7 +90,7 @@ public class MainVerticle extends AbstractVerticle {
       //String token = Jwts.builder().setSubject(authResult.getUser()).signWith(JWTAlgorithm, JWTSigningKey).compact();
       JsonObject payload = new JsonObject()
               .put("sub", authResult.getUser());                 
-      fetchToken(payload, okapiUrl + "/token", authApiKey).setHandler(result -> {
+      fetchToken(payload, okapiUrl + "/token", requestToken).setHandler(result -> {
         String token = result.result();
         ctx.response()
               .putHeader("Authorization", token)
@@ -168,11 +170,11 @@ public class MainVerticle extends AbstractVerticle {
   module. We pass along a shared key, since this exists outside of the standard
   auth chain
   */
-  private Future<String> fetchToken(JsonObject payload, String url, String key) {
+  private Future<String> fetchToken(JsonObject payload, String url, String requestToken) {
     Future<String> future = Future.future();
     HttpClient client = vertx.createHttpClient();
     HttpClientRequest request = client.request(HttpMethod.POST, url);
-    request.putHeader("AUTH_API_KEY", key)
+    request.putHeader("Authorization", "Bearer " + requestToken)
             .end(payload.encode());
     request.handler(result -> {
       if(result.statusCode() != 200) {
@@ -185,4 +187,11 @@ public class MainVerticle extends AbstractVerticle {
     return future;
   }
   
+  private String getRequestToken(RoutingContext ctx) {
+    String token = ctx.request().headers().get(OKAPI_TOKEN_HEADER);
+    if(token == null) {
+      return "";
+    }
+    return token;
+  }  
 }

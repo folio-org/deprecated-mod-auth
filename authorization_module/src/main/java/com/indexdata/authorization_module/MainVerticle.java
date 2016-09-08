@@ -1,7 +1,7 @@
 package com.indexdata.authorization_module;
 
 import com.indexdata.authorization_module.PermissionsSource;
-import com.indexdata.authorization_module.impl.DummySource;
+import com.indexdata.authorization_module.impl.DummyPermissionsSource;
 import com.indexdata.authorization_module.impl.ModulePermissionsSource;
 import com.sun.xml.internal.messaging.saaj.util.Base64;
 import io.jsonwebtoken.JwtParser;
@@ -49,10 +49,11 @@ public class MainVerticle extends AbstractVerticle {
   private static final String MODULE_TOKENS_HEADER = "X-Okapi-Module-Tokens";
   private static final String OKAPI_URL_HEADER = "X-Okapi-URL";
   private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
+  private static final String SIGN_TOKEN_PERMISSION = "auth.signtoken";
   
   private Key JWTSigningKey = MacProvider.generateKey(JWTAlgorithm);
   private static final SignatureAlgorithm JWTAlgorithm = SignatureAlgorithm.HS512;
-  ModulePermissionsSource permissionsSource;
+  PermissionsSource permissionsSource;
   private String authApiKey;
   private String okapiUrl;
  
@@ -66,11 +67,13 @@ public class MainVerticle extends AbstractVerticle {
       JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
     }
     /* TODO: Add configuration options for real permissions source */
-    permissionsSource = new ModulePermissionsSource(vertx);
+    //permissionsSource = new ModulePermissionsSource(vertx);
+    permissionsSource = new DummyPermissionsSource();
+    permissionsSource.setAuthApiKey(authApiKey);
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
     
-    router.route("/token").handler(BodyHandler.create());
-    router.route("/token").handler(this::handleToken);
+    //router.route("/token").handler(BodyHandler.create());
+    //router.route("/token").handler(this::handleToken);
     router.route("/*").handler(BodyHandler.create());
     router.route("/*").handler(this::handleAuthorize);
     
@@ -83,7 +86,9 @@ public class MainVerticle extends AbstractVerticle {
     });  
   }
   
+
   private void handleToken(RoutingContext ctx) {
+    
     updateOkapiUrl(ctx);
     if(ctx.request().method() == HttpMethod.POST) {
       final String postContent = ctx.getBodyAsString();
@@ -123,8 +128,8 @@ public class MainVerticle extends AbstractVerticle {
       String token = createToken(payload);
       
       ctx.response().setStatusCode(200)
-              //.putHeader("Authorization", "Bearer " + token)
-              .putHeader(OKAPI_TOKEN_HEADER, token)
+              .putHeader("Authorization", "Bearer " + token)
+              //.putHeader(OKAPI_TOKEN_HEADER, token)
               .end(postContent);
       return;
     } else {
@@ -136,6 +141,7 @@ public class MainVerticle extends AbstractVerticle {
   
   private void handleAuthorize(RoutingContext ctx) {
     updateOkapiUrl(ctx);
+    String requestToken = getRequestToken(ctx);
     String authHeader = ctx.request().headers().get("Authorization");
     String candidateToken = extractToken(authHeader);
     String tenant = ctx.request().headers().get("X-Okapi-Tenant");
@@ -154,9 +160,28 @@ public class MainVerticle extends AbstractVerticle {
     } catch (io.jsonwebtoken.MalformedJwtException|SignatureException s) {
         //logger.debug("JWT auth did not succeed");
         ctx.response().setStatusCode(400)
-                .end("Invalid token");
+                //.end("Invalid token");
+                .end();
         //System.out.println(authToken + " is not valid");
         return;
+    }
+    
+    /*
+    Here, we're really basically saying that we are only going to allow access 
+    to the /token endpoint if the request has a module-level permission defined
+    for it. There really should be no other case for this endpoint to be accessed
+    */
+    if(ctx.request().path().startsWith("/token")) {
+      JsonArray extraPermissions = getClaims(authToken).getJsonArray("extra_permissions");
+      if(extraPermissions == null || !extraPermissions.contains(SIGN_TOKEN_PERMISSION)) {
+        ctx.response()
+                .setStatusCode(403)
+                //.end("Insufficient permissions to create token");
+                .end();
+      } else {
+        handleToken(ctx);
+      }
+      return;
     }
     String username = getClaims(authToken).getString("sub");
     
@@ -209,7 +234,10 @@ public class MainVerticle extends AbstractVerticle {
     permissionsSource.getPermissionsForUser(username).setHandler((AsyncResult<JsonArray> res) -> {
       
       if(!res.succeeded()) {
-        ctx.fail(res.cause());
+        ctx.response()
+                .setStatusCode(500)
+                //.end("Unable to retrieve permissions for user");
+                .end();
         return;
       }
       JsonArray permissions = res.result();
@@ -225,9 +253,10 @@ public class MainVerticle extends AbstractVerticle {
       for(Object o : permissionsRequired) {
         if(!permissions.contains((String)o)) {
           ctx.response()
-                  .putHeader("Content-Type", "text/plain")
+                  //.putHeader("Content-Type", "text/plain")
                   .setStatusCode(403)
-                  .end("Access requires permission: " + (String)o);
+                  //.end("Access requires permission: " + (String)o);
+                  .end();
           return;
         }
       }
@@ -257,12 +286,14 @@ public class MainVerticle extends AbstractVerticle {
               .compact();
 
       //Return header containing relevant permissions
-      ctx.response().setChunked(true)
+      ctx.response()
+              //.setChunked(true)
               .setStatusCode(202)
               .putHeader(PERMISSIONS_HEADER, permissions.encode())
               .putHeader(MODULE_TOKENS_HEADER, moduleTokens.encode())
               .putHeader("Authorization", "Bearer " + token)
-              .end(ctx.getBodyAsString());
+              //.end(ctx.getBodyAsString());
+              .end();
       return;
     });
   }
@@ -273,6 +304,7 @@ public class MainVerticle extends AbstractVerticle {
     }
     permissionsSource.setOkapiUrl(okapiUrl);
   }
+  
   
   public String extractToken(String authorizationHeader) {
     Pattern pattern = null;
@@ -300,5 +332,13 @@ public class MainVerticle extends AbstractVerticle {
               .compact();
     return token;
   }
+  
+  private String getRequestToken(RoutingContext ctx) {
+    String token = ctx.request().headers().get(OKAPI_TOKEN_HEADER);
+    if(token == null) {
+      return "";
+    }
+    return token;
+  }  
   
 }

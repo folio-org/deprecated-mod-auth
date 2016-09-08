@@ -14,6 +14,10 @@ import io.vertx.core.json.JsonArray;
  */
 public interface PermissionsSource {
   
+  public void setOkapiUrl(String url);
+  public void setRequestToken(String token);
+  public void setAuthApiKey(String key);
+          
   Future<JsonArray> getPermissionsForUser(String username);
   
 }
