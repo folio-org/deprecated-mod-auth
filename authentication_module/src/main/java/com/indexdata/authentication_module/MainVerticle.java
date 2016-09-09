@@ -35,19 +35,29 @@ public class MainVerticle extends AbstractVerticle {
   private AuthUtil authUtil;
   private MongoClient mongoClient;
   private String okapiUrl;
-  //private String authApiKey;
+  private String authApiKey;
   private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
 
   @Override
   public void start(Future<Void> future) {
     //authSource = new DummyAuthSource();
     authUtil = new AuthUtil();
-    //authApiKey = System.getProperty("auth.api.key", "VERY_WEAK_KEY");
+    authApiKey = System.getProperty("auth.api.key", "VERY_WEAK_KEY");
     okapiUrl = System.getProperty("okapi.url", "http://localhost:9130");
     
-    String mongoURL = System.getProperty("mongo.url", "mongodb://localhost:27017");
+    String mongoURL = System.getProperty("mongo.url", "mongodb://localhost:27017/test");
     mongoClient = MongoClient.createShared(vertx, new JsonObject().put("connection_string", mongoURL));
     authSource = new MongoAuthSource(mongoClient, authUtil);
+    
+    String signThis = System.getProperty("sign.this", null);
+    if(signThis != null) {
+      String salt = authUtil.getSalt();
+      String hash = authUtil.calculateHash(signThis, salt);
+      System.out.println("{ \"password\" : \"" + signThis + "\", \"salt\" : \"" + salt + "\", \"hash\" : \"" + hash + "\" }");
+      future.complete();
+      vertx.close();
+      return;      
+    }
     
     Router router = Router.router(vertx);
     router.post("/authn/login").handler(BodyHandler.create()); //Allow us to read the POST data
@@ -80,6 +90,12 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
     authSource.authenticate(json).setHandler( res -> {
+      if(!res.succeeded()) {
+        ctx.response()
+                .setStatusCode(403)
+                .end("Bad credentials format: Must be JSON formatted with 'username' and 'password' fields");
+        return;
+      }
       AuthResult authResult = res.result();
       if(!authResult.getSuccess()) {
         ctx.response()
@@ -173,9 +189,10 @@ public class MainVerticle extends AbstractVerticle {
   private Future<String> fetchToken(JsonObject payload, String url, String requestToken) {
     Future<String> future = Future.future();
     HttpClient client = vertx.createHttpClient();
-    HttpClientRequest request = client.request(HttpMethod.POST, url);
-    request.putHeader("Authorization", "Bearer " + requestToken)
-            .end(payload.encode());
+    System.out.println("Attempting to request token from url " + url);
+    System.out.println("Using token: Bearer " + requestToken);
+    HttpClientRequest request = client.postAbs(url);
+    request.putHeader("Authorization", "Bearer " + requestToken);
     request.handler(result -> {
       if(result.statusCode() != 200) {
         future.fail("Got error " + result.statusCode() + " fetching token");
@@ -183,7 +200,8 @@ public class MainVerticle extends AbstractVerticle {
       }
       String token = result.getHeader("Authorization");
       future.complete(token);
-    });      
+    });
+    request.end(payload.encode());
     return future;
   }
   
