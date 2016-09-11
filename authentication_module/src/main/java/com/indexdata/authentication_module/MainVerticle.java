@@ -81,6 +81,7 @@ public class MainVerticle extends AbstractVerticle {
   private void handleLogin(RoutingContext ctx) {
     final String postContent = ctx.getBodyAsString();
     String requestToken = getRequestToken(ctx);
+    String tenant = ctx.request().headers().get("X-Okapi-Tenant");
     JsonObject json = null;
     try {
       json = new JsonObject(postContent);
@@ -89,32 +90,44 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().end("Unable to decode '" + postContent + "' as valid JSON");
       return;
     }
+    System.out.println("Authenticating with Mongo");
     authSource.authenticate(json).setHandler( res -> {
-      if(!res.succeeded()) {
+      if(res.failed()) {
         ctx.response()
                 .setStatusCode(403)
                 .end("Bad credentials format: Must be JSON formatted with 'username' and 'password' fields");
         return;
+      } else {
+        System.out.println("Checking AuthResult");
+        AuthResult authResult = res.result();
+        if(!authResult.getSuccess()) {
+          ctx.response()
+                  .setStatusCode(403)
+                  .end("Invalid credentials");
+        } else {
+          //String token = Jwts.builder().setSubject(authResult.getUser()).signWith(JWTAlgorithm, JWTSigningKey).compact();
+          JsonObject payload = new JsonObject()
+                  .put("sub", authResult.getUser()); 
+          //TODO: Debug and handle failure case
+          String tokenUrl = okapiUrl + "/token";
+          //System.out.println("Attempting to fetch token from url " + tokenUrl);
+          fetchToken(payload, tokenUrl, requestToken, tenant).setHandler(result -> {
+            if(result.failed()) {
+               ctx.response()
+                       .setStatusCode(500)
+                       .end("Unable to create token");
+               System.out.println("Fetching token failed due to " + result.cause().getMessage());
+            } else {
+              String token = result.result();
+              ctx.response()
+                    .putHeader("Authorization", token)
+                    .setStatusCode(200)
+                    .end(postContent); 
+            }
+          });
+        }
       }
-      AuthResult authResult = res.result();
-      if(!authResult.getSuccess()) {
-        ctx.response()
-                .setStatusCode(403)
-                .end("Invalid credentials");
-        return;
-      }
-      //String token = Jwts.builder().setSubject(authResult.getUser()).signWith(JWTAlgorithm, JWTSigningKey).compact();
-      JsonObject payload = new JsonObject()
-              .put("sub", authResult.getUser());                 
-      fetchToken(payload, okapiUrl + "/token", requestToken).setHandler(result -> {
-        String token = result.result();
-        ctx.response()
-              .putHeader("Authorization", token)
-              .setStatusCode(200)
-              .end(postContent); 
-        return;
-      });
-    });
+    });    
   }
   
   private void handleUser(RoutingContext ctx) {
@@ -186,22 +199,27 @@ public class MainVerticle extends AbstractVerticle {
   module. We pass along a shared key, since this exists outside of the standard
   auth chain
   */
-  private Future<String> fetchToken(JsonObject payload, String url, String requestToken) {
+  private Future<String> fetchToken(JsonObject payload, String url, String requestToken, String tenant) {
     Future<String> future = Future.future();
     HttpClient client = vertx.createHttpClient();
     System.out.println("Attempting to request token from url " + url);
     System.out.println("Using token: Bearer " + requestToken);
     HttpClientRequest request = client.postAbs(url);
     request.putHeader("Authorization", "Bearer " + requestToken);
+    request.putHeader("X-Okapi-Tenant", tenant);
     request.handler(result -> {
       if(result.statusCode() != 200) {
         future.fail("Got error " + result.statusCode() + " fetching token");
-        return;
+        System.out.println("Fetching token trace: " + result.getHeader("X-Okapi-Trace"));
+        result.bodyHandler(buf -> {
+          System.out.println("Output from token fetch is: " + buf.toString());
+        });
+      } else {
+        String token = result.getHeader("Authorization");
+        future.complete(token);
       }
-      String token = result.getHeader("Authorization");
-      future.complete(token);
     });
-    request.end(payload.encode());
+    request.end(new JsonObject().put("payload",payload).encode());
     return future;
   }
   

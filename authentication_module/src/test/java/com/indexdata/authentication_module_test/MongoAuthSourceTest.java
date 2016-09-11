@@ -68,18 +68,21 @@ public class MongoAuthSourceTest {
     
     ArrayList<JsonObject> credentialsList = new ArrayList<>();
   
+    //password is "BigBadWolf"
     credentialsList.add(new JsonObject()
       .put("username", "jack")
       .put("hash","5FB532B6D2926506E3EE32EF3AA73E6B6342E9D5")
       .put("salt","573547B9EF48329FD2285F256C0A330C27D3D0A5")
       .put("metadata", new JsonObject()));
    
+    //password is "LittleNiceSheep"
     credentialsList.add(new JsonObject()
       .put("username", "jill")
       .put("hash","C3B9C87747622CBBEBDC7C1F9F219C392E6B657B")
       .put("salt","7D10FB1E347835A05B5847FEF9033A581CC9FEDA")
       .put("metadata", new JsonObject()));
     
+    //password is "OldLazyDog"
     credentialsList.add(new JsonObject()
       .put("username", "joe")
       .put("hash","CBC698A0F5E975CABFAFEAC2B8D28896FEEE5B59")
@@ -115,7 +118,7 @@ public class MongoAuthSourceTest {
     });    
     return future;
   }
-  /*
+  
   @Test
   public void basicLoginTest(TestContext context) throws IOException {
     final Async async = context.async();
@@ -128,11 +131,13 @@ public class MongoAuthSourceTest {
                 .put("username", "jack")
                 .put("password", "BigBadWolf");
         source.authenticate(credentials).setHandler(res2 -> {
+          System.out.println("Got a result");
           if(res2.failed()) {
             context.fail(res2.cause());
           } else {
             AuthResult authResult = res2.result();
             context.assertTrue(authResult.getSuccess());
+            async.complete();
           }
         });
       }
@@ -141,7 +146,7 @@ public class MongoAuthSourceTest {
   
   
   @Test
-  public void badLoginTest(TestContext context) throws IOException {
+  public void badPasswordTest(TestContext context) throws IOException {
     final Async async = context.async();
     setUp().setHandler(res -> {
       if(!res.succeeded()) {
@@ -157,12 +162,38 @@ public class MongoAuthSourceTest {
           } else {
             AuthResult authResult = res2.result();
             context.assertFalse(authResult.getSuccess());
+            async.complete();
           }
         });
       }
     });
   } 
-  */
+  
+  @Test
+  public void badLoginTest(TestContext context) throws IOException {
+    final Async async = context.async();
+    setUp().setHandler(res -> {
+      if(!res.succeeded()) {
+        context.fail("Unable to initialize test");
+      } else {
+        JsonObject credentials = new JsonObject()
+                .put("username", "jake")
+                .put("password", "floWdaBgiB");
+        MongoAuthSource source = res.result();
+        source.authenticate(credentials).setHandler(res2 -> {
+          if(res2.failed()) {
+            context.fail(res2.cause());
+          } else {
+            AuthResult authResult = res2.result();
+            context.assertFalse(authResult.getSuccess());
+            async.complete();
+          }
+        });
+      }
+    });
+  } 
+  
+
   @Test
   public void addCredTest(TestContext context) throws IOException {
     final Async async = context.async();
@@ -185,7 +216,7 @@ public class MongoAuthSourceTest {
     });
   }
   
-  
+/*
  
   @Test
   public void checkAuthTest(TestContext context) throws IOException {
@@ -209,6 +240,7 @@ public class MongoAuthSourceTest {
     });
   } 
   
+*/
 
   
 }

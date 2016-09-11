@@ -161,28 +161,30 @@ public class MainVerticle extends AbstractVerticle {
         //logger.debug("JWT auth did not succeed");
         ctx.response().setStatusCode(400)
                 //.end("Invalid token");
-                .end();
-        //System.out.println(authToken + " is not valid");
+                .end(); 
+       //System.out.println(authToken + " is not valid");
         return;
     }
+    
+    System.out.println("Authz received token " + authToken);
+    System.out.println("Token claims are " + getClaims(authToken).encode());
     
     /*
     Here, we're really basically saying that we are only going to allow access 
     to the /token endpoint if the request has a module-level permission defined
     for it. There really should be no other case for this endpoint to be accessed
     */
+    
     if(ctx.request().path().startsWith("/token")) {
       JsonArray extraPermissions = getClaims(authToken).getJsonArray("extra_permissions");
       if(extraPermissions == null || !extraPermissions.contains(SIGN_TOKEN_PERMISSION)) {
-        ctx.response()
-                .setStatusCode(403)
-                //.end("Insufficient permissions to create token");
-                .end();
+        //do nothing
       } else {
         handleToken(ctx);
+        return;
       }
-      return;
     }
+   
     String username = getClaims(authToken).getString("sub");
     
     //Check and see if we have any module permissions defined
@@ -198,6 +200,7 @@ public class MainVerticle extends AbstractVerticle {
     /* TODO get module permissions (if they exist) */
     if(ctx.request().headers().contains(MODULE_PERMISSIONS_HEADER)) {
       JsonObject modulePermissions = new JsonObject(ctx.request().headers().get(MODULE_PERMISSIONS_HEADER));
+      System.out.println("Recieved module permissions are " + modulePermissions.encode());
       for(String moduleName : modulePermissions.fieldNames()) {
         JsonArray permissionList = modulePermissions.getJsonArray(moduleName);
         JsonObject tokenPayload = new JsonObject();
@@ -252,6 +255,7 @@ public class MainVerticle extends AbstractVerticle {
       //Check that for all required permissions, we have them
       for(Object o : permissionsRequired) {
         if(!permissions.contains((String)o)) {
+          System.out.println("Authz: " + permissions.encode() + " does not contain " + (String)o);
           ctx.response()
                   //.putHeader("Content-Type", "text/plain")
                   .setStatusCode(403)
@@ -285,9 +289,12 @@ public class MainVerticle extends AbstractVerticle {
               .setPayload(claims.encode())
               .compact();
 
+      System.out.println("Returning header " + PERMISSIONS_HEADER + " with content " + permissions.encode());
+      System.out.println("Returning header " + MODULE_TOKENS_HEADER + " with content " + moduleTokens.encode());
+      System.out.println("Returning Authorization Bearer token with content " + claims.encode());
       //Return header containing relevant permissions
       ctx.response()
-              //.setChunked(true)
+              .setChunked(true)
               .setStatusCode(202)
               .putHeader(PERMISSIONS_HEADER, permissions.encode())
               .putHeader(MODULE_TOKENS_HEADER, moduleTokens.encode())

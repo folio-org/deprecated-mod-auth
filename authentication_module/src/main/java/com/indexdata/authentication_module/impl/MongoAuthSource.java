@@ -37,19 +37,15 @@ public class MongoAuthSource implements AuthSource {
     JsonObject query = new JsonObject().put("username", username);
     System.out.println("Calling MongoDB to retrieve credentials");
     mongoClient.find("credentials", query, res -> {
-      System.out.println("Returned from Mongo");
-      if(res.succeeded()) {
-        System.out.println("Operation succeeded");
+      if(res.succeeded() && !res.result().isEmpty()) {
         JsonObject user = res.result().get(0);
         String storedHash = user.getString("hash");
         String storedSalt = user.getString("salt");
         String calculatedHash = authUtil.calculateHash(password, storedSalt);
         if(calculatedHash.equals(storedHash)) {
-          System.out.println("creds good");
           future.complete(new AuthResult(true, username, user.getJsonObject("metadata")));
           System.out.println("Future completed (good)");
         } else {
-          System.out.println("creds bad");
           future.complete(new AuthResult(false, username, user.getJsonObject("metadata")));
           System.out.println("Future completed (bad)");
         }
@@ -58,7 +54,7 @@ public class MongoAuthSource implements AuthSource {
         System.out.println("No such user");
         future.complete(new AuthResult(false, username, null));
       }
-      System.out.println("Time to return?");
+      System.out.println("Lambda completed");
     });
     System.out.println("Returning");
     return future;
@@ -95,21 +91,21 @@ public class MongoAuthSource implements AuthSource {
     return future;
   }
   
+ /*
   public Future<Boolean> checkAuth(JsonObject credentials) {
     final Future<Boolean> future = Future.future();
     final String username = credentials.getString("username");
     final String password = credentials.getString("password");
     JsonObject query = new JsonObject().put("username", username);
-    mongoClient.find("credentials", query, res -> {
-      if(!res.succeeded()/* || res.result() == null */) {
+    mongoClient.findOne("credentials", query, null, res -> {
+      if(!res.succeeded() || res.result() == null ) {
         future.complete(false);
       } else {
         //final JsonObject user = res.result();
-        String storedSalt = authUtil.getSalt();
-        //final String storedHash = res.result().getString("hash");
-        //final String storedSalt = res.result().getString("salt");
+        final String storedHash = res.result().getString("hash");
+        final String storedSalt = res.result().getString("salt");
         String calculatedHash = authUtil.calculateHash(password, storedSalt);
-        String storedHash = calculatedHash;
+  
         if(calculatedHash.equals(storedHash)) {
           future.complete(true);
         } else {
@@ -121,6 +117,7 @@ public class MongoAuthSource implements AuthSource {
     });
     return future;
   }
+ */
 
   @Override
   public Future<Boolean> updateAuth(JsonObject credentials, JsonObject metadata) {
