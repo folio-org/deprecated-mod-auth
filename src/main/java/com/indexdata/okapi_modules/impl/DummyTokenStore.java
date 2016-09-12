@@ -18,7 +18,7 @@ public class DummyTokenStore implements TokenStore {
     }
     return data.get(store);
   }
-  
+
   public boolean hasStore(String store) {
     return data.containsKey(store);
   }
