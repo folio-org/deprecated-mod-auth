@@ -29,7 +29,7 @@ public class AuthUtil {
     }
     return null;
   }
-  
+
   /*
    * Obtain a hash value based on a provided user password
    */
@@ -45,18 +45,18 @@ public class AuthUtil {
     }
     return DatatypeConverter.printHexBinary(hash);
   }
-    
+
   public String getSalt() {
     SecureRandom random = new SecureRandom();
     byte bytes[] = new byte[20];
     random.nextBytes(bytes);
     return DatatypeConverter.printHexBinary(bytes);
   }
-  
+
   public JsonObject getClaims(String jwt) {
     String encodedJson = jwt.split("\\.")[1];
     String decodedJson = Base64.base64Decode(encodedJson);
-    return new JsonObject(decodedJson);    
+    return new JsonObject(decodedJson);
   }
 
 }

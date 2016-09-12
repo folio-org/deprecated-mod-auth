@@ -52,13 +52,13 @@ public class MainVerticle extends AbstractVerticle {
   private static final String DESIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Desired";
   private static final String REQUIRED_PERMISSIONS_HEADER = "X-Okapi-Permissions-Required";
   private static final SignatureAlgorithm JWTAlgorithm = SignatureAlgorithm.HS512;
-  
+
   private Key JWTSigningKey = MacProvider.generateKey(JWTAlgorithm);
-  
+
   private AuthStore authStore;
   //private JWTAuth jwtAuth = null;
   private boolean standalone = false;
-  
+
   @Override
   public void start(Future<Void> fut) {
     String keySetting = System.getProperty("jwtSigningKey");
@@ -126,7 +126,7 @@ public class MainVerticle extends AbstractVerticle {
     router.post("/expire").handler(BodyHandler.create());
     router.post("/expire").handler(this::handleExpireToken);
     router.get("/dummy").handler(this::handleDummy);
-    
+
     HttpServer server = vertx.createHttpServer();
     final int port = Integer.parseInt(System.getProperty("port", "8081"));
     server.requestHandler(router::accept).listen(port, result -> {
@@ -135,9 +135,9 @@ public class MainVerticle extends AbstractVerticle {
         } else {
           fut.fail(result.cause());
         }
-    });  
+    });
   }
-  
+
   private JsonObject checkAuthRequest(HttpServerRequest request) {
     JsonObject result = new JsonObject();
     result.put("headers", new JsonObject());
@@ -149,7 +149,7 @@ public class MainVerticle extends AbstractVerticle {
       result.put("message", "No valid JWT token found. Header should be in 'Authorization: Bearer' format.");
       return result;
     }
-    // Is the token in our listing of expired tokens? 
+    // Is the token in our listing of expired tokens?
     if(tokenStore.hasToken(authToken, "expired")) {
       result.put("errorCode", 400);
       result.put("message", "Token is expired.");
@@ -183,8 +183,8 @@ public class MainVerticle extends AbstractVerticle {
     }
     return result;
   }
-  
-  
+
+
   /*
    * The handler to actually check that a JWT token is valid. If it is,
    * return a status of 202 and write the request content (if any)
@@ -199,7 +199,7 @@ public class MainVerticle extends AbstractVerticle {
     JsonObject authResult = this.checkAuthRequest(ctx.request());
     JsonArray permissionsRequired = new JsonArray();
     //JsonArray permissionsDesired;
-    
+
     /*
     for(String name : ctx.request().headers().names()) {
       String value = ctx.request().headers().get(name);
@@ -212,11 +212,11 @@ public class MainVerticle extends AbstractVerticle {
         permissionsRequired.add(entry);
       }
     }
-    
+
     if(authResult.containsKey("errorCode")) {
       ctx.response().putHeader("Content-Type", "text/plain");
       ctx.response().setStatusCode(authResult.getInteger("errorCode"));
-      ctx.response().end(authResult.getString("message"));    
+      ctx.response().end(authResult.getString("message"));
       return;
     }
     System.out.println("authResult is " + authResult.encode());
@@ -234,7 +234,7 @@ public class MainVerticle extends AbstractVerticle {
         return;
       }
     }
-    
+
     //Assuming that all is well, switch to chunked and return the content
     if(authResult.containsKey("headers")) {
       JsonObject headers = authResult.getJsonObject("headers");
@@ -246,7 +246,7 @@ public class MainVerticle extends AbstractVerticle {
     //ctx.response().putHeader(PERMISSIONS_HEADER, authResult.getJsonObject("headers").getString(PERMISSIONS_HEADER));
     ctx.response().setChunked(true);
     ctx.response().setStatusCode(202);
-  
+
     //Assign a handler that simply writes back the data
     ctx.request().handler( data -> {
       ctx.response().write(data);
@@ -254,7 +254,7 @@ public class MainVerticle extends AbstractVerticle {
   //Assign an end handler that closes the request
     ctx.request().endHandler( data -> {
       ctx.response().end();
-    });      
+    });
   }
 
   /*
@@ -304,7 +304,7 @@ public class MainVerticle extends AbstractVerticle {
    * Take a POSTed token to expire. Instead of plucking the token
    * directly from the header, we'll use one specified in the POST
    * data, in order to allow for a privileged 'admin' user with a
-   * non-matching token to expire a different token 
+   * non-matching token to expire a different token
    * */
   private void handleExpireToken(RoutingContext ctx) {
     final String postContent = ctx.getBodyAsString();
@@ -380,7 +380,7 @@ public class MainVerticle extends AbstractVerticle {
     );
     */
   }
-  
+
   /*
     Handle user creation and modification,
     if supported by the current backend
@@ -414,7 +414,7 @@ public class MainVerticle extends AbstractVerticle {
         return;
       }
     }
-    
+
     //System.out.println("Permissions and postcontent successfully received");
 
     if(ctx.request().method() == HttpMethod.POST) {
@@ -478,7 +478,7 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
   }
-  
+
   private void handleDummy(RoutingContext ctx) {
     ctx.response()
       .setStatusCode(200)
