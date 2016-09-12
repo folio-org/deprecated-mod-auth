@@ -1,0 +1,7 @@
+{
+    "srvcId" : "permissions-module",
+    "nodeId" : "localhost",
+    "descriptor" : {
+        "exec" : "java -jar -Dport=%p -jar permissions_module/permissions_module-fat.jar"
+    }
+}

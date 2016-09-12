@@ -1,0 +1,6 @@
+{ "_id" : { "$oid" : "57d2cf150a1f63eae94d3b00" }, "permission_name" : "thing.read", "sub_permissions" : [] }
+{ "_id" : { "$oid" : "57d2cf3d0a1f63eae94d3b01" }, "permission_name" : "thing.create", "sub_permissions" : [] }
+{ "_id" : { "$oid" : "57d2cf490a1f63eae94d3b02" }, "permission_name" : "thing.edit", "sub_permissions" : [] }
+{ "_id" : { "$oid" : "57d2cf530a1f63eae94d3b03" }, "permission_name" : "thing.delete", "sub_permissions" : [] }
+{ "_id" : { "$oid" : "57d2cf5e0a1f63eae94d3b04" }, "permission_name" : "thing.see_sensitive", "sub_permissions" : [] }
+{ "_id" : { "$oid" : "57d2cf690a1f63eae94d3b05" }, "permission_name" : "thing.super", "sub_permissions" : [ "thing.read", "thing.create", "thing.edit", "thing.delete", "thing.see_sensitive" ] }
