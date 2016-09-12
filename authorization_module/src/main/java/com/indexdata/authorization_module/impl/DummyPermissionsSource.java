@@ -37,5 +37,10 @@ public class DummyPermissionsSource implements PermissionsSource {
     return; 
   }
 
+  @Override
+  public void setTenant(String tenant) {
+    return;
+  }
+
   
 }

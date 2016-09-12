@@ -23,6 +23,7 @@ public class ModulePermissionsSource implements PermissionsSource {
   private Vertx vertx;
   private String requestToken;
   private String authApiKey = "";
+  private String tenant;
   
   public ModulePermissionsSource(Vertx vertx) {
     //permissionsModuleUrl = url;
@@ -41,6 +42,10 @@ public class ModulePermissionsSource implements PermissionsSource {
     authApiKey = key;
   }
   
+  public void setTenant(String tenant) {
+    this.tenant = tenant;
+  }
+  
   @Override
   public Future<JsonArray> getPermissionsForUser(String username) {
     Future<JsonArray> future = Future.future();
@@ -52,7 +57,7 @@ public class ModulePermissionsSource implements PermissionsSource {
     if(okapiUrl != null) {
       okapiUrlFinal = okapiUrl;
     }
-    String requestUrl = okapiUrlFinal + "/perms/privileged/users/" + username + "/permissions";
+    String requestUrl = okapiUrlFinal + "perms/privileged/users/" + username + "/permissions";
     System.out.println("Requesting permissions from URL at " + requestUrl);
     HttpClientRequest req = client.getAbs(requestUrl, res-> {
       if(res.statusCode() == 200) {
@@ -62,6 +67,9 @@ public class ModulePermissionsSource implements PermissionsSource {
         });
       } else {
         //future.fail("Unable to retrieve permissions");
+        res.bodyHandler(res2 -> {
+          System.out.println("Unable to retrieve permissions: " + res2.toString());
+        });
         future.complete(new JsonArray());
       }
     });
@@ -70,6 +78,7 @@ public class ModulePermissionsSource implements PermissionsSource {
     });
     //req.headers().add("Authorization", "Bearer " + requestToken);
     req.headers().add("Auth_API_Key", authApiKey);
+    req.headers().add("X-Okapi-Tenant", tenant);
     req.end();
     return future;
   }

@@ -140,11 +140,18 @@ public class MainVerticle extends AbstractVerticle {
   }  
   
   private void handleAuthorize(RoutingContext ctx) {
+    if(ctx.request().path().startsWith("/perms/privileged")) {
+      ctx.response()
+              .setStatusCode(200)
+              .end();
+      return;
+    }
     updateOkapiUrl(ctx);
     String requestToken = getRequestToken(ctx);
     String authHeader = ctx.request().headers().get("Authorization");
     String candidateToken = extractToken(authHeader);
     String tenant = ctx.request().headers().get("X-Okapi-Tenant");
+    permissionsSource.setTenant(tenant);
     if(candidateToken == null) {
       //Generate a new "dummy" token
       JsonObject dummyPayload = new JsonObject()
@@ -244,7 +251,7 @@ public class MainVerticle extends AbstractVerticle {
         return;
       }
       JsonArray permissions = res.result();
-      
+      System.out.println("Permissions for " + username + ": " + permissions.encode());
       if(extraPermissions != null) {
         for(Object o : extraPermissions)
         {
