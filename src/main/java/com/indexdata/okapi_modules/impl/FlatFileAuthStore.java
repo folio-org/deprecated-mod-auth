@@ -51,7 +51,7 @@ public class FlatFileAuthStore implements AuthStore {
   }
 
   /*
-  Read user entries from a text file. 
+  Read user entries from a text file.
   Entries are serialized as JSON in a list of objects.
   Clearly do not want to use this for more than a few users.
   Use salt and provided password to generate new hash. Check for match.
@@ -83,12 +83,12 @@ public class FlatFileAuthStore implements AuthStore {
   private void deserializeFile() {
     try {
       String userdata = new String(Files.readAllBytes(Paths.get(secretsFilepath)));
-      this.users = new JsonArray(userdata);      
+      this.users = new JsonArray(userdata);
     } catch(IOException e) {
       throw new RuntimeException(e);
-    } 
+    }
   }
-  
+
   private void serializeFile() {
     String userdata = this.users.encodePrettily();
     System.out.println("Writing string '" + userdata + "' to file '" + secretsFilepath + "'");
@@ -103,7 +103,7 @@ public class FlatFileAuthStore implements AuthStore {
   }
 
   private String calculateHash(String password, String salt) {
-    return authUtil.calculateHash(password, salt, authParams.getString("algorithm"), 
+    return authUtil.calculateHash(password, salt, authParams.getString("algorithm"),
             authParams.getInteger("iterations"), authParams.getInteger("keyLength"));
   }
 
@@ -223,7 +223,7 @@ public class FlatFileAuthStore implements AuthStore {
       fileLock.unlock();
     }
   }
-  
+
 
   private static class CheckResult {
 

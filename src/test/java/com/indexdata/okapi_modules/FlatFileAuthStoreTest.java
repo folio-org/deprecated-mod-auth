@@ -29,14 +29,14 @@ public class FlatFileAuthStoreTest {
   private FlatFileAuthStore ffAS;
   JsonObject credentials;
   JsonObject authParams;
-  
+
   @Before
   public void setUp(TestContext context) throws IOException {
     final Async async = context.async();
     //Guess who hates declaring JSON inline in Java? This guy.
-    String jsonFileContents = 
+    String jsonFileContents =
             "[{\"username\":\"erikthered\",\"hash\":\"878978635FB7D8DD653B64AF0D174A496FFBAE37\",\"salt\":\"0EB926D24332F4D9\",\"metadata\":{\"permissions\":[\"auth_add_user\",\"auth_update_user\",\"auth_delete_user\"]}}]";
-    
+
     File tempConfigFile = File.createTempFile("ffauthtest", ".json");
     PrintWriter dump = new PrintWriter(tempConfigFile.getAbsolutePath());
     dump.write(jsonFileContents);
@@ -50,8 +50,8 @@ public class FlatFileAuthStoreTest {
               .put("algorithm", "PBKDF2WithHmacSHA1");
     ffAS = new FlatFileAuthStore(tempConfigFile.getAbsolutePath(), authParams);
     async.complete();
-  }  
-  
+  }
+
   @Test
   public void testMetadata(TestContext context) {
     final Async async = context.async();
@@ -61,7 +61,7 @@ public class FlatFileAuthStoreTest {
      async.complete();
     });
   }
-  
+
   @Test
   public void addUser(TestContext context) {
     final Async async = context.async();
@@ -79,7 +79,7 @@ public class FlatFileAuthStoreTest {
       });
     });
   }
-  
+
   @Test
   public void modUser(TestContext context) {
     final Async async = context.async();
@@ -93,7 +93,7 @@ public class FlatFileAuthStoreTest {
     ffAS.updateLogin(newCreds, newMetadata).setHandler(res -> {
       context.assertTrue(res.result());
       ffAS.getMetadata(newCreds).setHandler(res2 -> {
-        context.assertTrue(res2.result().getJsonArray("permissions").contains("auth_delete_user"));      
+        context.assertTrue(res2.result().getJsonArray("permissions").contains("auth_delete_user"));
         JsonObject loginCreds = new JsonObject()
                 .put("username", "erikthered")
                 .put("password", "ChickenMonkeyDuck");
@@ -104,10 +104,10 @@ public class FlatFileAuthStoreTest {
       });
     });
   }
-    
-  
+
+
   @After
   public void tearDown() {
-    
+
   }
 }

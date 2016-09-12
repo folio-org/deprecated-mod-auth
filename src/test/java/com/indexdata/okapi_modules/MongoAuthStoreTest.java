@@ -43,11 +43,11 @@ public class MongoAuthStoreTest {
   private MongoClient mongoClient;
   private JsonObject credentials;
   private JsonObject authParams;
-  
-  private Vertx vertx;  
+
+  private Vertx vertx;
   private static MongodProcess MONGO;
   private static int MONGO_PORT = 12345;
-  
+
   @BeforeClass
   public static void initialize() throws IOException {
     MongodStarter starter = MongodStarter.getDefaultInstance();
@@ -58,12 +58,12 @@ public class MongoAuthStoreTest {
     MongodExecutable mongodExecutable = starter.prepare(mongodConfig);
     MONGO = mongodExecutable.start();
   }
-  
+
   @AfterClass
   public static void shutDown() {
     MONGO.stop();
   }
-  
+
   @Before
   public void setUp(TestContext context) throws IOException {
     final Async async = context.async();
@@ -71,7 +71,7 @@ public class MongoAuthStoreTest {
     String host = "localhost";
     mongoConfig.put("connection_string", "mongodb://localhost:" + MONGO_PORT);
     mongoConfig.put("db_name", "test_db");
-   
+
     vertx = Vertx.vertx();
     mongoClient = MongoClient.createShared(vertx, mongoConfig);
     credentials = new JsonObject()
@@ -94,20 +94,20 @@ public class MongoAuthStoreTest {
                     )
             );
     System.out.println("Adding new user");
-    mongoClient.insert("users", newUser, res -> { 
+    mongoClient.insert("users", newUser, res -> {
       if(res.succeeded()) {
         async.complete();
       } else {
         context.fail();
       }
-    });    
+    });
   }
-  
+
   @After
   public void tearDown(TestContext context) {
     vertx.close(context.asyncAssertSuccess());
   }
-  
+
   @Test
   public void testMetadata(TestContext context) {
     final Async async = context.async();
@@ -118,7 +118,7 @@ public class MongoAuthStoreTest {
       async.complete();
     });
   }
-  
+
   @Test
   public void testVerifyLogin(TestContext context) {
     final Async async = context.async();

@@ -17,18 +17,18 @@ import io.vertx.ext.mongo.MongoClient;
  * @author kurt
  */
 public class MongoAuthStore implements AuthStore {
-  
+
   private final MongoClient mongoClient;
   final private AuthUtil authUtil = new AuthUtil();
   private JsonObject authParams;
-  
+
   public MongoAuthStore(MongoClient mongoClient, JsonObject authParams) {
     this.mongoClient = mongoClient;
     this.authParams = authParams;
   }
-  
+
   private String calculateHash(String password, String salt) {
-    return authUtil.calculateHash(password, salt, 
+    return authUtil.calculateHash(password, salt,
             authParams.getString("algorithm"),
             authParams.getInteger("iterations"),
             authParams.getInteger("keyLength")
@@ -84,7 +84,7 @@ public class MongoAuthStore implements AuthStore {
         future.complete(Boolean.FALSE);
       }
     });
-    
+
     return future;
   }
 
@@ -99,7 +99,7 @@ public class MongoAuthStore implements AuthStore {
       } else {
         future.complete(Boolean.FALSE);
       }
-    }); 
+    });
     return future;
   }
 
@@ -126,7 +126,7 @@ public class MongoAuthStore implements AuthStore {
           } else {
             future.complete(Boolean.FALSE);
           }
-        });     
+        });
       }
     });
     return future;
@@ -144,8 +144,8 @@ public class MongoAuthStore implements AuthStore {
         future.complete(null);
       }
     });
-    
+
     return future;
   }
-  
+
 }
