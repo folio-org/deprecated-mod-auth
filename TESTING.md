@@ -19,7 +19,7 @@ vagrant ssh
 
 ```
 sudo apt-get update
-sudo apt-get git default-jdk nodejs npm maven mongodb
+sudo apt-get install git default-jdk nodejs npm maven mongodb
 ```
 
 ## Update nodejs to the the newer version
