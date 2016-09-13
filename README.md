@@ -2,12 +2,12 @@
 
 ## Authentication
 The Authentication module is responsible for verifying the user's identity and issuing a valid JWT that can be used for system access.
-The implementation of this module may vary (username/password, SAML, OAuth, etc.)
+The implementation of this module may vary (username/password, SAML, OAuth, etc.), and it is possible for more than one Authentication module to exist in a running system. The default implementation uses a simple username and password for authentication.
 
-## Filtering
+## Authorization
 This module is responsible for filtering all proxy traffic and checking for a valid token. In addition, it is responsible for
-retrieving the permissions for a given user and passing these permissions to destination modules.
+retrieving the permissions for a given user and making decisions regarding access based on user permissions and defined requirements for a given path. It provides a token creation endpoint that privileged modules (such as Authentication) may make use of.
 
-## User and Permission Data
-This module stores the users, as well as their associated permissions. It needs to be accessible by the filtering module, and may
-need to be accessible by the Authentication module, in the event that Authentication events come with permissions/roles information.
+## Permissions
+This module stores permissions and associations between permissions and users. It also maintains a heirarchy of permissions and sub-permissions, allowing for permissions to act as roles, rather than simple bits. It is used primarily by the Authorization module, though it is possible that some Authentication implementations may have reason to make calls to the Permissions module as well.
+
