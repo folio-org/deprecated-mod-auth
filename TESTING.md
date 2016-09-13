@@ -47,7 +47,6 @@ ln -s ~/okapi/okapi-core/target okapi
 ```
 git clone https://github.com/folio-org/mod-auth.git
 cd mod-auth
-git checkout split_modules
 cd authentication_module
 mvn clean install
 cd ../authorization_module/
