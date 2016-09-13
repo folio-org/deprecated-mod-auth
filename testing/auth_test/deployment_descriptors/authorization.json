@@ -2,6 +2,6 @@
     "srvcId" : "authorization-module",
     "nodeId" : "localhost",
     "descriptor" : {
-        "exec" : "java -jar -Dport=%p -Djwt.signing.key=CorrectBatteryHorseStaple -jar authorization_module/authorization_module-fat.jar"
+        "exec" : "java -jar -Dport=%p -Djwt.signing.key=CorrectBatteryHorseStaple -jar ../../authorization_module/target/authorization_module-fat.jar"
     }
 }

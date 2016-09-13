@@ -2,6 +2,6 @@
     "srvcId" : "retrieve-module",
     "nodeId" : "localhost",
     "descriptor" : {
-        "exec" : "node retrieve/src/Server.js -p %p"
+        "exec" : "node ../retrieve_module/src/Server.js -p %p"
     }
 }
