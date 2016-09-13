@@ -59,16 +59,16 @@ mvn clean install
 ## Build the nodejs sample modules we'll be using
 
 ```
-cd /home/vagrant/mod-auth/testing/thing_module
+cd ~/mod-auth/testing/thing_module
 npm install
-cd /home/vagrant/mod-auth/testing/retrieve_module
+cd ~/mod-auth/testing/retrieve_module
 npm install
 ```
 
 ## Initialize MongoDB with our testing data
 
 ```
-mongoimport -d test -c permissions ~/mod-auth/testing/mongo/
+mongoimport -d test -c users ~/mod-auth/testing/mongo/users.json
 mongoimport -d test -c permissions ~/mod-auth/testing/mongo/permissions.json  
 mongoimport -d test -c credentials ~/mod-auth/testing/mongo/credentials.json 
 ```
