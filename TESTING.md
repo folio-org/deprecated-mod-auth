@@ -1,6 +1,6 @@
 # Testing the Auth environment in Vagrant
 
-### Prequisites: Vagrant installed on host system
+### Prerequisites: Vagrant installed on host system
 
 ## Initialize a Ubuntu 16.04 environment in Vagrant
 

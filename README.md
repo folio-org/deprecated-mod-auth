@@ -14,7 +14,7 @@ The Authentication module is responsible for verifying the user's identity and i
 This module is responsible for filtering all proxy traffic and checking for a valid token. In addition, it is responsible for retrieving the permissions for a given user and making decisions regarding access based on user permissions and defined requirements for a given path. It provides a token creation endpoint that privileged modules (such as Authentication) may make use of.
 
 ## Permissions
-This module stores permissions and associations between permissions and users. It also maintains a heirarchy of permissions and sub-permissions, allowing for permissions to act as roles, rather than simple bits. It is used primarily by the Authorization module, though it is possible that some Authentication implementations may have reason to make calls to the Permissions module as well.
+This module stores permissions and associations between permissions and users. It also maintains a hierarchy of permissions and sub-permissions, allowing for permissions to act as roles, rather than simple bits. It is used primarily by the Authorization module, though it is possible that some Authentication implementations may have reason to make calls to the Permissions module as well.
 
 
 
