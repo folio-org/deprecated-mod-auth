@@ -1,6 +1,6 @@
 # Testing the Auth environment in Vagrant
 
-### Prequisites: Vagrant installed on host system
+### Prerequisites: Vagrant installed on host system
 
 ## Initialize a Ubuntu 16.04 environment in Vagrant
 
@@ -19,7 +19,7 @@ vagrant ssh
 
 ```
 sudo apt-get update
-sudo apt-get git default-jdk nodejs npm maven mongodb
+sudo apt-get install git default-jdk nodejs npm maven mongodb
 ```
 
 ## Update nodejs to the the newer version
@@ -47,7 +47,6 @@ ln -s ~/okapi/okapi-core/target okapi
 ```
 git clone https://github.com/folio-org/mod-auth.git
 cd mod-auth
-git checkout split_modules
 cd authentication_module
 mvn clean install
 cd ../authorization_module/
