@@ -13,8 +13,8 @@ import io.vertx.core.json.JsonObject;
  * @author kurt
  */
 public interface AuthSource {
-  public Future<AuthResult> authenticate(JsonObject credentials);
-  public Future<Boolean> addAuth(JsonObject credentials, JsonObject metadata);
-  public Future<Boolean> updateAuth(JsonObject credentials, JsonObject metadata);
-  public Future<Boolean> deleteAuth(String username);
+  public Future<AuthResult> authenticate(JsonObject credentials, String tenant);
+  public Future<Boolean> addAuth(JsonObject credentials, JsonObject metadata, String tenant);
+  public Future<Boolean> updateAuth(JsonObject credentials, JsonObject metadata, String tenant);
+  public Future<Boolean> deleteAuth(String username, String tenant);
 }

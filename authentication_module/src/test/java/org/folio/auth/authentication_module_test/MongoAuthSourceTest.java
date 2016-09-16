@@ -42,6 +42,7 @@ import org.junit.Test;
 @RunWith(VertxUnitRunner.class)
 public class MongoAuthSourceTest {
   private AuthUtil authUtil = new AuthUtil();
+  final static String tenant = "diku";
   
   @Rule
   public RunTestOnContext rule = new RunTestOnContext();
@@ -71,6 +72,7 @@ public class MongoAuthSourceTest {
     //password is "BigBadWolf"
     credentialsList.add(new JsonObject()
       .put("username", "jack")
+      .put("tenant", "diku")
       .put("hash","5FB532B6D2926506E3EE32EF3AA73E6B6342E9D5")
       .put("salt","573547B9EF48329FD2285F256C0A330C27D3D0A5")
       .put("metadata", new JsonObject()));
@@ -78,6 +80,7 @@ public class MongoAuthSourceTest {
     //password is "LittleNiceSheep"
     credentialsList.add(new JsonObject()
       .put("username", "jill")
+      .put("tenant", "diku")
       .put("hash","C3B9C87747622CBBEBDC7C1F9F219C392E6B657B")
       .put("salt","7D10FB1E347835A05B5847FEF9033A581CC9FEDA")
       .put("metadata", new JsonObject()));
@@ -85,6 +88,7 @@ public class MongoAuthSourceTest {
     //password is "OldLazyDog"
     credentialsList.add(new JsonObject()
       .put("username", "joe")
+      .put("tenant", "diku")
       .put("hash","CBC698A0F5E975CABFAFEAC2B8D28896FEEE5B59")
       .put("salt","9BC945B30568C76F90795EFF062A9D6A38025D57")
       .put("metadata", new JsonObject()));
@@ -130,7 +134,7 @@ public class MongoAuthSourceTest {
         JsonObject credentials = new JsonObject()
                 .put("username", "jack")
                 .put("password", "BigBadWolf");
-        source.authenticate(credentials).setHandler(res2 -> {
+        source.authenticate(credentials, tenant).setHandler(res2 -> {
           System.out.println("Got a result");
           if(res2.failed()) {
             context.fail(res2.cause());
@@ -156,7 +160,7 @@ public class MongoAuthSourceTest {
                 .put("username", "jack")
                 .put("password", "floWdaBgiB");
         MongoAuthSource source = res.result();
-        source.authenticate(credentials).setHandler(res2 -> {
+        source.authenticate(credentials, tenant).setHandler(res2 -> {
           if(res2.failed()) {
             context.fail(res2.cause());
           } else {
@@ -180,7 +184,7 @@ public class MongoAuthSourceTest {
                 .put("username", "jake")
                 .put("password", "floWdaBgiB");
         MongoAuthSource source = res.result();
-        source.authenticate(credentials).setHandler(res2 -> {
+        source.authenticate(credentials, tenant).setHandler(res2 -> {
           if(res2.failed()) {
             context.fail(res2.cause());
           } else {
@@ -205,7 +209,7 @@ public class MongoAuthSourceTest {
                 .put("username", "frank")
                 .put("password", "HotDogsLadies");
         MongoAuthSource source = res.result();
-        source.addAuth(newCreds, new JsonObject()).setHandler(res2 -> {
+        source.addAuth(newCreds, new JsonObject(), tenant).setHandler(res2 -> {
           if(res2.failed()) {
             context.fail(res2.cause());
           } else {

@@ -193,6 +193,14 @@ public class MainVerticle extends AbstractVerticle {
     }
    
     String username = getClaims(authToken).getString("sub");
+    String jwtTenant = getClaims(authToken).getString("tenant");
+    if(!jwtTenant.equals(tenant)) {
+      System.out.println("Expected tenant: " + tenant + ", got tenant: " + jwtTenant);
+      ctx.response()
+              .setStatusCode(403)
+              .end("Invalid token for access");
+      return;
+    }
     
     //Check and see if we have any module permissions defined
     final JsonArray extraPermissions = getClaims(authToken).getJsonArray("extra_permissions");

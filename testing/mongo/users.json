@@ -1,3 +1,3 @@
-{ "_id" : { "$oid" : "57d2cf940a1f63eae94d3b06" }, "user_name" : "jack", "user_permissions" : [ "thing.read" ] }
-{ "_id" : { "$oid" : "57d2cfa10a1f63eae94d3b07" }, "user_name" : "jill", "user_permissions" : [ "thing.read", "thing.see_sensitive", "thing.create" ] }
-{ "_id" : { "$oid" : "57d2cfb20a1f63eae94d3b08" }, "user_name" : "joe", "user_permissions" : [] }
+{ "_id" : { "$oid" : "57d2cf940a1f63eae94d3b06" }, "user_name" : "jack", "tenant" : "diku", "user_permissions" : [ "thing.read" ] }
+{ "_id" : { "$oid" : "57d2cfa10a1f63eae94d3b07" }, "user_name" : "jill", "tenant" : "diku", "user_permissions" : [ "thing.read", "thing.see_sensitive", "thing.create" ] }
+{ "_id" : { "$oid" : "57d2cfb20a1f63eae94d3b08" }, "user_name" : "joe", "tenant" : "diku", "user_permissions" : [] }

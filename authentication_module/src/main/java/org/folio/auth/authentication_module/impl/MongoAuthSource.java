@@ -27,14 +27,16 @@ public class MongoAuthSource implements AuthSource {
   }
 
   @Override
-  public Future<AuthResult> authenticate(JsonObject credentials) {
+  public Future<AuthResult> authenticate(JsonObject credentials, String tenant) {
     Future<AuthResult> future = Future.future();
     String username = credentials.getString("username");
     String password = credentials.getString("password");
     if(username == null || password == null) {
       return Future.failedFuture("Credentials must contain a username and password");
     }
-    JsonObject query = new JsonObject().put("username", username);
+    JsonObject query = new JsonObject()
+            .put("username", username)
+            .put("tenant", tenant);
     System.out.println("Calling MongoDB to retrieve credentials");
     mongoClient.find("credentials", query, res -> {
       if(res.succeeded() && !res.result().isEmpty()) {
@@ -61,11 +63,13 @@ public class MongoAuthSource implements AuthSource {
   }
 
   @Override
-  public Future<Boolean> addAuth(JsonObject credentials, JsonObject metadata) {
+  public Future<Boolean> addAuth(JsonObject credentials, JsonObject metadata, String tenant) {
     Future<Boolean> future = Future.future();
     String username = credentials.getString("username");
     String password = credentials.getString("password");
-    JsonObject query = new JsonObject().put("username", username);
+    JsonObject query = new JsonObject()
+            .put("username", username)
+            .put("tenant", tenant);
     mongoClient.find("credentials", query, res -> {
       if(res.succeeded()) {
         //username already exists!
@@ -75,6 +79,7 @@ public class MongoAuthSource implements AuthSource {
         String newHash = authUtil.calculateHash(username, password);
         JsonObject insert = new JsonObject()
                 .put("username", username)
+                .put("tenant", tenant)
                 //.put("password", password)
                 .put("hash", newHash)
                 .put("salt", newSalt)
@@ -91,39 +96,13 @@ public class MongoAuthSource implements AuthSource {
     return future;
   }
   
- /*
-  public Future<Boolean> checkAuth(JsonObject credentials) {
-    final Future<Boolean> future = Future.future();
-    final String username = credentials.getString("username");
-    final String password = credentials.getString("password");
-    JsonObject query = new JsonObject().put("username", username);
-    mongoClient.findOne("credentials", query, null, res -> {
-      if(!res.succeeded() || res.result() == null ) {
-        future.complete(false);
-      } else {
-        //final JsonObject user = res.result();
-        final String storedHash = res.result().getString("hash");
-        final String storedSalt = res.result().getString("salt");
-        String calculatedHash = authUtil.calculateHash(password, storedSalt);
-  
-        if(calculatedHash.equals(storedHash)) {
-          future.complete(true);
-        } else {
-          future.complete(false);
-        }
-      }
-      mongoClient.close();
-      System.out.println("WTF, mate?");
-    });
-    return future;
-  }
- */
-
   @Override
-  public Future<Boolean> updateAuth(JsonObject credentials, JsonObject metadata) {
+  public Future<Boolean> updateAuth(JsonObject credentials, JsonObject metadata, String tenant) {
     Future<Boolean> future = Future.future();
     String username = credentials.getString("username");
-    JsonObject query = new JsonObject().put("username", username);
+    JsonObject query = new JsonObject()
+            .put("username", username)
+            .put("tenant", tenant);
     JsonObject update = new JsonObject();
     String newSalt = authUtil.getSalt();
     if(credentials.containsKey("password")) {
@@ -148,9 +127,11 @@ public class MongoAuthSource implements AuthSource {
   }
 
   @Override
-  public Future<Boolean> deleteAuth(String username) {
+  public Future<Boolean> deleteAuth(String username, String tenant) {
     Future<Boolean> future = Future.future();
-    JsonObject query = new JsonObject().put("username", username);
+    JsonObject query = new JsonObject()
+            .put("username", username)
+            .put("tenant", tenant);
     mongoClient.remove("credentials", query, res -> {
       if(res.succeeded()) {
         future.complete(Boolean.TRUE);

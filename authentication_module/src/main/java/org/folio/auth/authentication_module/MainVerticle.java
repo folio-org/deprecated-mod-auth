@@ -91,7 +91,7 @@ public class MainVerticle extends AbstractVerticle {
       return;
     }
     System.out.println("Authenticating with Mongo");
-    authSource.authenticate(json).setHandler( res -> {
+    authSource.authenticate(json, tenant).setHandler( res -> {
       if(res.failed()) {
         ctx.response()
                 .setStatusCode(403)
@@ -131,6 +131,7 @@ public class MainVerticle extends AbstractVerticle {
   }
   
   private void handleUser(RoutingContext ctx) {
+    String tenant = ctx.request().headers().get("X-Okapi-Tenant");
     String requestBody = null;
     if(ctx.request().method() == HttpMethod.POST ||
             ctx.request().method() == HttpMethod.PUT) {
@@ -140,7 +141,7 @@ public class MainVerticle extends AbstractVerticle {
       JsonObject postData = new JsonObject(requestBody);
       JsonObject credentials = postData.getJsonObject("credentials");
       JsonObject metadata = postData.getJsonObject("metadata");
-      authSource.addAuth(credentials, metadata).setHandler(res-> {
+      authSource.addAuth(credentials, metadata, tenant).setHandler(res-> {
         if(!res.succeeded()) {
           ctx.response()
                   .setStatusCode(500)
@@ -163,7 +164,7 @@ public class MainVerticle extends AbstractVerticle {
                 .end("Invalid user");
         return;
       }
-      authSource.updateAuth(credentials, metadata).setHandler(res -> {
+      authSource.updateAuth(credentials, metadata, tenant).setHandler(res -> {
         if(!res.succeeded()) {
           ctx.response()
                   .setStatusCode(500)
@@ -176,7 +177,7 @@ public class MainVerticle extends AbstractVerticle {
       });      
     } else if (ctx.request().method() == HttpMethod.DELETE) {
       String username = ctx.request().getParam("username");
-      authSource.deleteAuth(username).setHandler(res -> {
+      authSource.deleteAuth(username, tenant).setHandler(res -> {
         if(!res.succeeded()) {
           ctx.response()
                   .setStatusCode(500)

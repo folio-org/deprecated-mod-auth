@@ -17,7 +17,7 @@ import io.vertx.core.json.JsonObject;
 public class DummyAuthSource implements AuthSource {
 
   @Override
-  public Future<AuthResult> authenticate(JsonObject credentials) {
+  public Future<AuthResult> authenticate(JsonObject credentials, String tenant) {
     AuthResult authResult = new AuthResult();
     authResult.setSuccess(true);
     authResult.setUser("dummy");
@@ -25,17 +25,17 @@ public class DummyAuthSource implements AuthSource {
   }  
 
   @Override
-  public Future<Boolean> addAuth(JsonObject credentials, JsonObject metadata) {
+  public Future<Boolean> addAuth(JsonObject credentials, JsonObject metadata, String tenant) {
     return Future.succeededFuture(true);
   }
 
   @Override
-  public Future<Boolean> updateAuth(JsonObject credentials, JsonObject metadata) {
+  public Future<Boolean> updateAuth(JsonObject credentials, JsonObject metadata, String tenant) {
     return Future.succeededFuture(true);  
   }
 
   @Override
-  public Future<Boolean> deleteAuth(String username) {
+  public Future<Boolean> deleteAuth(String username, String tenant) {
     return Future.succeededFuture(true);
   }
 }
