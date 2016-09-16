@@ -39,6 +39,7 @@ mvn clean install
 
 ## Clone the auth module repo and build the 3 modules
 ```
+cd ..
 git clone https://github.com/folio-org/mod-auth.git
 cd mod-auth
 cd authentication_module
