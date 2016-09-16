@@ -21,7 +21,11 @@ import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import java.security.Key;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -154,9 +158,14 @@ public class MainVerticle extends AbstractVerticle {
     permissionsSource.setTenant(tenant);
     if(candidateToken == null) {
       //Generate a new "dummy" token
+      DateFormat df = new SimpleDateFormat("MM/dd/yyyyTHH:mm:ss");
+      Date now = Calendar.getInstance().getTime();
       JsonObject dummyPayload = new JsonObject()
-              .put("sub", "UNDEFINED_USER")
-              .put("tenant", tenant);
+              .put("sub", "UNDEFINED_USER__" + ctx.request().remoteAddress().toString() +
+                      "__" + df.format(now))
+              .put("tenant", tenant)
+              .put("dummy", true);
+      
       candidateToken = createToken(dummyPayload);
     }
     final String authToken = candidateToken;
@@ -182,8 +191,10 @@ public class MainVerticle extends AbstractVerticle {
     for it. There really should be no other case for this endpoint to be accessed
     */
     
+    JsonObject tokenClaims = getClaims(authToken);
+    
     if(ctx.request().path().startsWith("/token")) {
-      JsonArray extraPermissions = getClaims(authToken).getJsonArray("extra_permissions");
+      JsonArray extraPermissions = tokenClaims.getJsonArray("extra_permissions");
       if(extraPermissions == null || !extraPermissions.contains(SIGN_TOKEN_PERMISSION)) {
         //do nothing
       } else {
@@ -192,8 +203,8 @@ public class MainVerticle extends AbstractVerticle {
       }
     }
    
-    String username = getClaims(authToken).getString("sub");
-    String jwtTenant = getClaims(authToken).getString("tenant");
+    String username = tokenClaims.getString("sub");
+    String jwtTenant = tokenClaims.getString("tenant");
     if(!jwtTenant.equals(tenant)) {
       System.out.println("Expected tenant: " + tenant + ", got tenant: " + jwtTenant);
       ctx.response()
@@ -248,8 +259,15 @@ public class MainVerticle extends AbstractVerticle {
       }
     }
     
+    PermissionsSource usePermissionsSource;
+    if(tokenClaims.getBoolean("dummy") != null) {
+      usePermissionsSource = new DummyPermissionsSource();
+    } else {
+      usePermissionsSource = permissionsSource;
+    }
+    
     //Retrieve the user permissions and populate the permissions header
-    permissionsSource.getPermissionsForUser(username).setHandler((AsyncResult<JsonArray> res) -> {
+    usePermissionsSource.getPermissionsForUser(username).setHandler((AsyncResult<JsonArray> res) -> {
       
       if(!res.succeeded()) {
         ctx.response()
