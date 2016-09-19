@@ -19,7 +19,7 @@ vagrant ssh
 
 ```
 sudo apt-get update
-sudo apt-get install git default-jdk nodejs npm maven mongodb
+sudo apt-get install curl default-jdk git maven mongodb nodejs npm 
 ```
 
 ## Update nodejs to the the newer version
@@ -39,29 +39,24 @@ mvn clean install
 
 ## Clone the auth module repo and build the 3 modules
 ```
-cd ..
+cd ~
 git clone https://github.com/folio-org/mod-auth.git
 cd mod-auth
-cd authentication_module
-mvn clean install
-cd ../authorization_module/
-mvn clean install
-cd ../permissions_module/
-mvn clean install
+cd authentication_module && mvn clean install
+cd ../authorization_module && mvn clean install
+cd ../permissions_module && mvn clean install
 ```
 
 ## Build the nodejs sample modules we'll be using
 
 ```
-cd ~/mod-auth/testing/thing_module
-npm install
-cd ~/mod-auth/testing/retrieve_module
-npm install
+cd ~/mod-auth/testing/thing_module && npm install
+cd ~/mod-auth/testing/retrieve_module && npm install
 ```
 
 ## Create symlinks in the testing directory for Okapi
 ```
-cd mod-auth/testing/auth_test/
+cd ~/mod-auth/testing/auth_test/
 ln -s ~/okapi/okapi-core/target okapi
 ```
 
@@ -76,6 +71,6 @@ mongoimport -d test -c credentials ~/mod-auth/testing/mongo/credentials.json
 ## Run the script to load the modules
 
 ```
-cd mod-auth/testing/auth_test/
-./runme
+cd ~/mod-auth/testing/auth_test/
+./run_me.sh
 ```
