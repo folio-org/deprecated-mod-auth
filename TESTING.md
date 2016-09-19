@@ -37,14 +37,9 @@ cd okapi
 mvn clean install
 ```
 
-## Create symlinks in the testing directory for Okapi
-```
-cd mod-auth/testing/auth_test/
-ln -s ~/okapi/okapi-core/target okapi
-```
-
 ## Clone the auth module repo and build the 3 modules
 ```
+cd ..
 git clone https://github.com/folio-org/mod-auth.git
 cd mod-auth
 cd authentication_module
@@ -62,6 +57,12 @@ cd ~/mod-auth/testing/thing_module
 npm install
 cd ~/mod-auth/testing/retrieve_module
 npm install
+```
+
+## Create symlinks in the testing directory for Okapi
+```
+cd mod-auth/testing/auth_test/
+ln -s ~/okapi/okapi-core/target okapi
 ```
 
 ## Initialize MongoDB with our testing data
