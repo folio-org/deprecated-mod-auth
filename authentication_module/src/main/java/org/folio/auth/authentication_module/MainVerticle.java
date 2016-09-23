@@ -106,6 +106,7 @@ public class MainVerticle extends AbstractVerticle {
                   .end("Invalid credentials");
         } else {
           //String token = Jwts.builder().setSubject(authResult.getUser()).signWith(JWTAlgorithm, JWTSigningKey).compact();
+          System.out.println("Authentication successful, getting signed token for login");
           JsonObject payload = new JsonObject()
                   .put("sub", authResult.getUser()); 
           //TODO: Debug and handle failure case
@@ -203,7 +204,7 @@ public class MainVerticle extends AbstractVerticle {
   private Future<String> fetchToken(JsonObject payload, String url, String requestToken, String tenant) {
     Future<String> future = Future.future();
     HttpClient client = vertx.createHttpClient();
-    System.out.println("Attempting to request token from url " + url);
+    System.out.println("Attempting to request token from url " + url + " for claims " + payload.encode());
     System.out.println("Using token: Bearer " + requestToken);
     HttpClientRequest request = client.postAbs(url);
     request.putHeader("Authorization", "Bearer " + requestToken);

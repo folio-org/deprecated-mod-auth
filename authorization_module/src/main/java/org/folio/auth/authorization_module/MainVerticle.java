@@ -144,31 +144,44 @@ public class MainVerticle extends AbstractVerticle {
   }  
   
   private void handleAuthorize(RoutingContext ctx) {
+    System.out.println("Calling handleAuthorize");
+    
+    /*
     if(ctx.request().path().startsWith("/perms/privileged")) {
       ctx.response()
               .setStatusCode(200)
               .end();
       return;
     }
+    */
+    
     updateOkapiUrl(ctx);
     String requestToken = getRequestToken(ctx);
     String authHeader = ctx.request().headers().get("Authorization");
     String candidateToken = extractToken(authHeader);
     String tenant = ctx.request().headers().get("X-Okapi-Tenant");
+    System.out.println("Setting tenant for permissions source");
     permissionsSource.setTenant(tenant);
     if(candidateToken == null) {
-      //Generate a new "dummy" token
-      DateFormat df = new SimpleDateFormat("MM/dd/yyyyTHH:mm:ss");
-      Date now = Calendar.getInstance().getTime();
-      JsonObject dummyPayload = new JsonObject()
-              .put("sub", "UNDEFINED_USER__" + ctx.request().remoteAddress().toString() +
-                      "__" + df.format(now))
-              .put("tenant", tenant)
-              .put("dummy", true);
-      
+      JsonObject dummyPayload = new JsonObject();
+      try {
+        System.out.println("Generating a dummy token");
+        //Generate a new "dummy" token
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+        Date now = Calendar.getInstance().getTime();
+        dummyPayload
+                .put("sub", "UNDEFINED_USER__" + ctx.request().remoteAddress().toString() +
+                        "__" + df.format(now))
+                .put("tenant", tenant)
+                .put("dummy", true);
+      } catch(Exception e) {
+        System.out.println("Error creating dummy token: " + e.getMessage());
+        throw new RuntimeException(e);
+      }
       candidateToken = createToken(dummyPayload);
     }
     final String authToken = candidateToken;
+    System.out.println("authToken is " + authToken);
     JwtParser parser = null;
     try {
       parser = Jwts.parser().setSigningKey(JWTSigningKey);
@@ -261,15 +274,18 @@ public class MainVerticle extends AbstractVerticle {
     
     PermissionsSource usePermissionsSource;
     if(tokenClaims.getBoolean("dummy") != null) {
+      System.out.println("Using dummy permissions source");
       usePermissionsSource = new DummyPermissionsSource();
     } else {
       usePermissionsSource = permissionsSource;
     }
     
     //Retrieve the user permissions and populate the permissions header
+    System.out.println("Getting user permissions for " + username);
     usePermissionsSource.getPermissionsForUser(username).setHandler((AsyncResult<JsonArray> res) -> {
       
-      if(!res.succeeded()) {
+      if(res.failed()) {
+        System.out.println("Unable to retrieve permissions for " + username + ": " + res.cause().getMessage());
         ctx.response()
                 .setStatusCode(500)
                 //.end("Unable to retrieve permissions for user");
