@@ -15,11 +15,18 @@ vagrant up
 vagrant ssh
 ```
 
+## Add the source to Ubuntu to install mongo-org community version
+
+```
+sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
+echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+```
+
 ## Install required software to run the demo
 
 ```
 sudo apt-get update
-sudo apt-get install curl default-jdk git maven mongodb nodejs npm 
+sudo apt-get install curl default-jdk git maven nodejs npm mongodb-org
 ```
 
 ## Update nodejs to the the newer version
@@ -73,4 +80,13 @@ mongoimport -d test -c credentials ~/mod-auth/testing/mongo/credentials.json
 ```
 cd ~/mod-auth/testing/auth_test/
 ./run_me.sh
+```
+
+## Build and run the Mocha tests
+
+```
+cd ~/mod-auth/testing/mocha_testing/
+npm install
+npm start
+
 ```
