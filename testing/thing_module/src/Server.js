@@ -141,6 +141,14 @@ function handle_one_thing(req, res) {
             thing.secret_power = new_thing.secret_power;
             res.status(200).json(thing);
         }
+    } else if(req.method == 'DELETE') {
+        var thing = get_thing(name);
+        if(thing == null) {
+            res.status(404).json({"error":"No thing by that name could be found"});
+        } else {
+            delete_thing(thing);
+            res.status(200).json({});
+        }
     } else {
         res.status(400).json({"error" : "Unsupported request"});
     }

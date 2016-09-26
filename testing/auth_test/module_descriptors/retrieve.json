@@ -12,7 +12,8 @@
             "methods" : [ "GET" ],
             "path" : "/retrieve",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "retrieve.read" ]
         }
     ],
     "modulePermissions" : [ "thing.read", "thing.see_sensitive" ]

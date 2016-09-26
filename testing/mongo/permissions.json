@@ -13,3 +13,4 @@
 { "_id" : { "$oid" : "57e01ad843ed636513395e8f" }, "permission_name" : "perms.permissions", "tenant" : "diku", "sub_permissions" : [ "perms.permissions.read", "perms.permissions.create", "perms.permissions.delete" ] }
 { "_id" : { "$oid" : "57e01b1843ed636513395e90" }, "permission_name" : "perms.users", "tenant" : "diku", "sub_permissions" : [ "perms.users.create", "perms.users.read", "perms.users.delete" ] }
 { "_id" : { "$oid" : "57e01b3e43ed636513395e91" }, "permission_name" : "perms", "tenant" : "diku", "sub_permissions" : [ "perms.users", "perms.permissions" ] }
+{ "_id" : { "$oid" : "57e983409d5854b6eb7f57ff" }, "permission_name" : "retrieve.read", "tenant" : "diku", "sub_permissions" : [] }
