@@ -65,8 +65,12 @@ function retrieve_thing(req, res) {
 }
 
 function get_okapi_url(req) {
-    console.log("X-Okapi-Url is " + req.get('X-Okapi-Url'));
-    return req.get('X-Okapi-Url');
+    var url = req.get('X-Okapi-Url');
+    console.log("X-Okapi-Url is " + url);
+    if(!url.endsWith("/")) {
+        url = url + "/";
+    }
+    return url;
 }
 
 function get_jwt(req) {

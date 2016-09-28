@@ -32,6 +32,9 @@ public class ModulePermissionsSource implements PermissionsSource {
   
   public void setOkapiUrl(String url) {
     okapiUrl = url;
+    if(!okapiUrl.endsWith("/")) {
+      okapiUrl = okapiUrl + "/";
+    }
   }
   
   public void setRequestToken(String token) {
@@ -53,7 +56,7 @@ public class ModulePermissionsSource implements PermissionsSource {
     options.setConnectTimeout(10);
     options.setIdleTimeout(10);
     HttpClient client = vertx.createHttpClient(options);
-    String okapiUrlFinal = "http://localhost:9130";
+    String okapiUrlFinal = "http://localhost:9130/";
     if(okapiUrl != null) {
       okapiUrlFinal = okapiUrl;
     }
