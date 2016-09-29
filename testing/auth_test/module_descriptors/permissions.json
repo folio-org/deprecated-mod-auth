@@ -9,12 +9,6 @@
     ],
     "routingEntries" : [
         {
-            "methods" : [ "GET" ],
-            "path" : "/perms/privileged",
-            "level" : "5",
-            "type" : "request-response"
-        },
-        {
             "methods" : [ "POST" ],
             "path" : "/perms/users",
             "level" : "30",
