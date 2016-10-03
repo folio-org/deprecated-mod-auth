@@ -4,7 +4,7 @@
     <groupId>com.indexdata</groupId>
     <artifactId>mod-auth-parent</artifactId>
     <packaging>pom</packaging>
-    <version>1.0</version>
+    <version>0.1-SNAPSHOT</version>
     <name>Mod Auth Parent POM</name>
     <modules>
         <module>authentication_module</module>
