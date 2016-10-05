@@ -7,9 +7,6 @@ package org.folio.auth.authentication_module;
 
 import org.folio.auth.authentication_module.impl.DummyAuthSource;
 import org.folio.auth.authentication_module.impl.MongoAuthSource;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.impl.crypto.MacProvider;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClient;
@@ -18,6 +15,8 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServer;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
@@ -37,6 +36,7 @@ public class MainVerticle extends AbstractVerticle {
   private String okapiUrl;
   private String authApiKey;
   private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-authentication-module");
 
   @Override
   public void start(Future<Void> future) {
@@ -48,6 +48,17 @@ public class MainVerticle extends AbstractVerticle {
     String mongoURL = System.getProperty("mongo.url", "mongodb://localhost:27017/test");
     mongoClient = MongoClient.createShared(vertx, new JsonObject().put("connection_string", mongoURL));
     authSource = new MongoAuthSource(mongoClient, authUtil);
+    
+    String logLevel = System.getProperty("log.level", null);
+    if(logLevel != null) {
+      try {
+        org.apache.log4j.Logger l4jLogger;
+        l4jLogger = org.apache.log4j.Logger.getLogger("mod-auth-authentication-module");
+        l4jLogger.getParent().setLevel(org.apache.log4j.Level.toLevel(logLevel));
+      } catch(Exception e) {
+        logger.error("Unable to set log level: " + e.getMessage());
+      }
+    }
     
     String signThis = System.getProperty("sign.this", null);
     if(signThis != null) {
@@ -90,7 +101,7 @@ public class MainVerticle extends AbstractVerticle {
       ctx.response().end("Unable to decode '" + postContent + "' as valid JSON");
       return;
     }
-    System.out.println("Authenticating with Mongo");
+    logger.debug("Authenticating with Mongo");
     authSource.authenticate(json, tenant).setHandler( res -> {
       if(res.failed()) {
         ctx.response()
@@ -98,7 +109,7 @@ public class MainVerticle extends AbstractVerticle {
                 .end("Bad credentials format: Must be JSON formatted with 'username' and 'password' fields");
         return;
       } else {
-        System.out.println("Checking AuthResult");
+        logger.debug("Checking AuthResult");
         AuthResult authResult = res.result();
         if(!authResult.getSuccess()) {
           ctx.response()
@@ -106,7 +117,7 @@ public class MainVerticle extends AbstractVerticle {
                   .end("Invalid credentials");
         } else {
           //String token = Jwts.builder().setSubject(authResult.getUser()).signWith(JWTAlgorithm, JWTSigningKey).compact();
-          System.out.println("Authentication successful, getting signed token for login");
+          logger.debug("Authentication successful, getting signed token for login");
           JsonObject payload = new JsonObject()
                   .put("sub", authResult.getUser()); 
           //TODO: Debug and handle failure case
@@ -117,7 +128,7 @@ public class MainVerticle extends AbstractVerticle {
                ctx.response()
                        .setStatusCode(500)
                        .end("Unable to create token");
-               System.out.println("Fetching token failed due to " + result.cause().getMessage());
+               logger.error("Fetching token failed due to " + result.cause().getMessage());
             } else {
               String token = result.result();
               ctx.response()
@@ -204,17 +215,17 @@ public class MainVerticle extends AbstractVerticle {
   private Future<String> fetchToken(JsonObject payload, String url, String requestToken, String tenant) {
     Future<String> future = Future.future();
     HttpClient client = vertx.createHttpClient();
-    System.out.println("Attempting to request token from url " + url + " for claims " + payload.encode());
-    System.out.println("Using token: Bearer " + requestToken);
+    logger.debug("Attempting to request token from url " + url + " for claims " + payload.encode());
+    logger.debug("Using token: Bearer " + requestToken);
     HttpClientRequest request = client.postAbs(url);
     request.putHeader("Authorization", "Bearer " + requestToken);
     request.putHeader("X-Okapi-Tenant", tenant);
     request.handler(result -> {
       if(result.statusCode() != 200) {
         future.fail("Got error " + result.statusCode() + " fetching token");
-        System.out.println("Fetching token trace: " + result.getHeader("X-Okapi-Trace"));
+        logger.debug("Fetching token trace: " + result.getHeader("X-Okapi-Trace"));
         result.bodyHandler(buf -> {
-          System.out.println("Output from token fetch is: " + buf.toString());
+          logger.debug("Output from token fetch is: " + buf.toString());
         });
       } else {
         String token = result.getHeader("Authorization");

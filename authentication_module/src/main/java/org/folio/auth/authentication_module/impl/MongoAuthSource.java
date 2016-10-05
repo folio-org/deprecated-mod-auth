@@ -12,6 +12,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -20,6 +22,7 @@ import io.vertx.ext.mongo.MongoClient;
 public class MongoAuthSource implements AuthSource {
   private final MongoClient mongoClient;
   private AuthUtil authUtil;
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-authentication-module");
   
   public MongoAuthSource(MongoClient mongoClient, AuthUtil authUtil) {
     this.mongoClient = mongoClient;
@@ -37,7 +40,7 @@ public class MongoAuthSource implements AuthSource {
     JsonObject query = new JsonObject()
             .put("username", username)
             .put("tenant", tenant);
-    System.out.println("Calling MongoDB to retrieve credentials");
+    logger.debug("Calling MongoDB to retrieve credentials");
     mongoClient.find("credentials", query, res -> {
       if(res.succeeded() && !res.result().isEmpty()) {
         JsonObject user = res.result().get(0);
@@ -46,19 +49,19 @@ public class MongoAuthSource implements AuthSource {
         String calculatedHash = authUtil.calculateHash(password, storedSalt);
         if(calculatedHash.equals(storedHash)) {
           future.complete(new AuthResult(true, username, user.getJsonObject("metadata")));
-          System.out.println("Future completed (good)");
+          logger.debug("Future completed (good)");
         } else {
           future.complete(new AuthResult(false, username, user.getJsonObject("metadata")));
-          System.out.println("Future completed (bad)");
+          logger.debug("Future completed (bad)");
         }
       } else {
         //username not found
-        System.out.println("No such user");
+        logger.error("No such user: " + username);
         future.complete(new AuthResult(false, username, null));
       }
-      System.out.println("Lambda completed");
+      logger.debug("Lambda completed");
     });
-    System.out.println("Returning");
+    logger.debug("Returning");
     return future;
   }
 
@@ -115,7 +118,7 @@ public class MongoAuthSource implements AuthSource {
     if(metadata != null) {
       update.put("metadata", metadata);
     }
-    mongoClient.update("credentials", query, update, res -> {
+    mongoClient.updateCollection("credentials", query, update, res -> {
       if(res.succeeded()) {
         future.complete(Boolean.TRUE);
       } else {
@@ -132,7 +135,7 @@ public class MongoAuthSource implements AuthSource {
     JsonObject query = new JsonObject()
             .put("username", username)
             .put("tenant", tenant);
-    mongoClient.remove("credentials", query, res -> {
+    mongoClient.removeDocument("credentials", query, res -> {
       if(res.succeeded()) {
         future.complete(Boolean.TRUE);
       } else {

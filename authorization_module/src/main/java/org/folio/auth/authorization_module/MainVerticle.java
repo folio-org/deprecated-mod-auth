@@ -20,6 +20,8 @@ import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.DecodeException;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 import java.security.Key;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -60,6 +62,7 @@ public class MainVerticle extends AbstractVerticle {
   PermissionsSource permissionsSource;
   private String authApiKey;
   private String okapiUrl;
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-authorization-module");
  
   public void start(Future<Void> future) {
     Router router = Router.router(vertx);
@@ -70,6 +73,17 @@ public class MainVerticle extends AbstractVerticle {
     if(keySetting != null) {
       //JWTSigningKey = new SecretKeySpec(DatatypeConverter.parseHexBinary(keySetting), JWTAlgorithm.getJcaName());
       JWTSigningKey = new SecretKeySpec(keySetting.getBytes(), JWTAlgorithm.getJcaName());
+    }
+    
+    String logLevel = System.getProperty("log.level", null);
+    if(logLevel != null) {
+      try {
+        org.apache.log4j.Logger l4jLogger;
+        l4jLogger = org.apache.log4j.Logger.getLogger("mod-auth-authorization-module");
+        l4jLogger.getParent().setLevel(org.apache.log4j.Level.toLevel(logLevel));
+      } catch(Exception e) {
+        logger.error("Unable to set log level: " + e.getMessage());
+      }
     }
     permissionsSource = new ModulePermissionsSource(vertx);
     //permissionsSource = new DummyPermissionsSource();
@@ -147,7 +161,7 @@ public class MainVerticle extends AbstractVerticle {
   }  
   
   private void handleAuthorize(RoutingContext ctx) {
-    System.out.println("Calling handleAuthorize");
+    logger.debug("Calling handleAuthorize");
     
     /*
     if(ctx.request().path().startsWith("/perms/privileged")) {
@@ -163,7 +177,7 @@ public class MainVerticle extends AbstractVerticle {
     String authHeader = ctx.request().headers().get("Authorization");
     String candidateToken = extractToken(authHeader);
     String tenant = ctx.request().headers().get("X-Okapi-Tenant");
-    System.out.println("AuthZ> Setting tenant for permissions source");
+    logger.debug("AuthZ> Setting tenant for permissions source");
     permissionsSource.setTenant(tenant);
     //permissionsSource.setRequestToken(requestToken);
     
@@ -182,7 +196,7 @@ public class MainVerticle extends AbstractVerticle {
     if(candidateToken == null) {
       JsonObject dummyPayload = new JsonObject();
       try {
-        System.out.println("AuthZ> Generating a dummy token");
+        logger.debug("AuthZ> Generating a dummy token");
         //Generate a new "dummy" token
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
         Date now = Calendar.getInstance().getTime();
@@ -192,13 +206,13 @@ public class MainVerticle extends AbstractVerticle {
                 .put("tenant", tenant)
                 .put("dummy", true);
       } catch(Exception e) {
-        System.out.println("AuthZ> Error creating dummy token: " + e.getMessage());
+        logger.debug("AuthZ> Error creating dummy token: " + e.getMessage());
         throw new RuntimeException(e);
       }
       candidateToken = createToken(dummyPayload);
     }
     final String authToken = candidateToken;
-    System.out.println("AuthZ> Final authToken is " + authToken);
+    logger.debug("AuthZ> Final authToken is " + authToken);
     JwtParser parser = null;
     try {
       parser = Jwts.parser().setSigningKey(JWTSigningKey);
@@ -213,7 +227,7 @@ public class MainVerticle extends AbstractVerticle {
     }
     
     //System.out.println("Authz received token " + authToken);
-    System.out.println("AuthZ> Token claims are " + getClaims(authToken).encode());
+    logger.debug("AuthZ> Token claims are " + getClaims(authToken).encode());
     
     /*
     Here, we're really basically saying that we are only going to allow access 
@@ -236,7 +250,7 @@ public class MainVerticle extends AbstractVerticle {
     String username = tokenClaims.getString("sub");
     String jwtTenant = tokenClaims.getString("tenant");
     if(!jwtTenant.equals(tenant)) {
-      System.out.println("AuthZ> Expected tenant: " + tenant + ", got tenant: " + jwtTenant);
+      logger.debug("AuthZ> Expected tenant: " + tenant + ", got tenant: " + jwtTenant);
       ctx.response()
               .setStatusCode(403)
               .end("Invalid token for access");
@@ -260,7 +274,7 @@ public class MainVerticle extends AbstractVerticle {
     /* TODO get module permissions (if they exist) */
     if(ctx.request().headers().contains(MODULE_PERMISSIONS_HEADER)) {
       JsonObject modulePermissions = new JsonObject(ctx.request().headers().get(MODULE_PERMISSIONS_HEADER));
-      System.out.println("AuthZ> Recieved module permissions are " + modulePermissions.encode());
+      logger.debug("AuthZ> Recieved module permissions are " + modulePermissions.encode());
       for(String moduleName : modulePermissions.fieldNames()) {
         JsonArray permissionList = modulePermissions.getJsonArray(moduleName);
         JsonObject tokenPayload = new JsonObject();
@@ -295,18 +309,18 @@ public class MainVerticle extends AbstractVerticle {
     
     PermissionsSource usePermissionsSource;
     if(tokenClaims.getBoolean("dummy") != null) {
-      System.out.println("AuthZ> Using dummy permissions source");
+      logger.debug("AuthZ> Using dummy permissions source");
       usePermissionsSource = new DummyPermissionsSource();
     } else {
       usePermissionsSource = permissionsSource;
     }
     
     //Retrieve the user permissions and populate the permissions header
-    System.out.println("AuthZ> Getting user permissions for " + username);
+    logger.debug("AuthZ> Getting user permissions for " + username);
     usePermissionsSource.getPermissionsForUser(username).setHandler((AsyncResult<JsonArray> res) -> {
       
       if(res.failed()) {
-        System.out.println("AuthZ> Unable to retrieve permissions for " + username + ": " + res.cause().getMessage());
+        logger.error("AuthZ> Unable to retrieve permissions for " + username + ": " + res.cause().getMessage());
         ctx.response()
                 .setStatusCode(500)
                 //.end("Unable to retrieve permissions for user");
@@ -314,7 +328,7 @@ public class MainVerticle extends AbstractVerticle {
         return;
       }
       JsonArray permissions = res.result();
-      System.out.println("AuthZ> Permissions for " + username + ": " + permissions.encode());
+      logger.debug("AuthZ> Permissions for " + username + ": " + permissions.encode());
       if(extraPermissions != null) {
         for(Object o : extraPermissions)
         {
@@ -325,7 +339,7 @@ public class MainVerticle extends AbstractVerticle {
       //Check that for all required permissions, we have them
       for(Object o : permissionsRequired) {
         if(!permissions.contains((String)o) && !extraPermissions.contains((String)o)) {
-          System.out.println("Authz> " + permissions.encode() + "(user permissions) nor " +
+          logger.debug("Authz> " + permissions.encode() + "(user permissions) nor " +
                   extraPermissions.encode() + "(module permissions) do not contain " + (String)o);
           ctx.response()
                   //.putHeader("Content-Type", "text/plain")
@@ -360,9 +374,9 @@ public class MainVerticle extends AbstractVerticle {
               .setPayload(claims.encode())
               .compact();
 
-      System.out.println("AuthZ> Returning header " + PERMISSIONS_HEADER + " with content " + permissions.encode());
-      System.out.println("AuthZ> Returning header " + MODULE_TOKENS_HEADER + " with content " + moduleTokens.encode());
-      System.out.println("AuthZ> Returning Authorization Bearer token with content " + claims.encode());
+      logger.debug("AuthZ> Returning header " + PERMISSIONS_HEADER + " with content " + permissions.encode());
+      logger.debug("AuthZ> Returning header " + MODULE_TOKENS_HEADER + " with content " + moduleTokens.encode());
+      logger.debug("AuthZ> Returning Authorization Bearer token with content " + claims.encode());
       //Return header containing relevant permissions
       ctx.response()
               .setChunked(true)
@@ -413,7 +427,7 @@ public class MainVerticle extends AbstractVerticle {
   
   private String getRequestToken(RoutingContext ctx) {
     String token = ctx.request().headers().get(OKAPI_TOKEN_HEADER);
-    System.out.println("AuthZ> Module request token from Okapi is: " + token);
+    logger.debug("AuthZ> Module request token from Okapi is: " + token);
     if(token == null) {
       return "";
     }

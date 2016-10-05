@@ -12,6 +12,8 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.logging.Logger;
+import io.vertx.core.logging.LoggerFactory;
 
 /**
  *
@@ -24,6 +26,7 @@ public class ModulePermissionsSource implements PermissionsSource {
   private String requestToken;
   private String authApiKey = "";
   private String tenant;
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-authorization-module");
   
   public ModulePermissionsSource(Vertx vertx) {
     //permissionsModuleUrl = url;
@@ -62,7 +65,7 @@ public class ModulePermissionsSource implements PermissionsSource {
     }
     //String requestUrl = okapiUrlFinal + "perms/privileged/users/" + username + "/permissions";
     String requestUrl = okapiUrlFinal + "perms/users/" + username + "/permissions";
-    System.out.println("Requesting permissions from URL at " + requestUrl);
+    logger.debug("Requesting permissions from URL at " + requestUrl);
     HttpClientRequest req = client.getAbs(requestUrl, res-> {
       if(res.statusCode() == 200) {
         res.bodyHandler(res2 -> {
