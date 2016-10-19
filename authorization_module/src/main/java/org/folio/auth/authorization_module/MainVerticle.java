@@ -162,16 +162,7 @@ public class MainVerticle extends AbstractVerticle {
   
   private void handleAuthorize(RoutingContext ctx) {
     logger.debug("Calling handleAuthorize");
-    
-    /*
-    if(ctx.request().path().startsWith("/perms/privileged")) {
-      ctx.response()
-              .setStatusCode(200)
-              .end();
-      return;
-    }
-    */
-    
+        
     updateOkapiUrl(ctx);
     String requestToken = getRequestToken(ctx);
     String authHeader = ctx.request().headers().get("Authorization");
@@ -179,7 +170,6 @@ public class MainVerticle extends AbstractVerticle {
     String tenant = ctx.request().headers().get("X-Okapi-Tenant");
     logger.debug("AuthZ> Setting tenant for permissions source");
     permissionsSource.setTenant(tenant);
-    //permissionsSource.setRequestToken(requestToken);
     
     JsonObject permissionRequestPayload = new JsonObject()
                 .put("sub", "_AUTHZ_MODULE_")
