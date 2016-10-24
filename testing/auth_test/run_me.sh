@@ -14,6 +14,28 @@ curl -w '\n' -X POST -D - \
     -d @./tenants/diku.json \
     http://localhost:9130/_/proxy/tenants
 
+#Register the Users module with Okapi
+echo "Registering the Users module"
+curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -d @./module_descriptors/mod-users.json \
+    http://localhost:9130/_/proxy/modules
+
+#Deploy the users module
+echo "Deploying the Users module"
+curl -w '\n' -D - -s \
+    -X POST \
+    -H "Content-type: application/json" \
+    -d @./deployment_descriptors/mod-users.json \
+    http://localhost:9130/_/discovery/modules
+
+#Associate the users module with our tenant
+echo "Adding the Permissions module to our tenant"
+curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -d @./tenant_associations/mod-users.json \
+    http://localhost:9130/_/proxy/tenants/diku/modules
+
 #Register the Permissions module with Okapi
 echo "Registering the Permissions module"
 curl -w '\n' -X POST -D - \

@@ -54,17 +54,31 @@ cd ../authorization_module && mvn clean install
 cd ../permissions_module && mvn clean install
 ```
 
-## Build the nodejs sample modules we'll be using
+## Build the nodejs sample modules we will be using
 
 ```
 cd ~/mod-auth/testing/thing_module && npm install
 cd ~/mod-auth/testing/retrieve_module && npm install
 ```
 
+## Clone the mod-users repo
+```
+cd ~
+git clone https://github.com/folio-org/mod-users.git
+cd mod-users
+mvn clean install
+```
+
 ## Create symlinks in the testing directory for Okapi
 ```
 cd ~/mod-auth/testing/auth_test/
 ln -s ~/okapi/okapi-core/target okapi
+```
+
+## Create a symlink for mod-users
+```
+cd ~/mod-auth/testing/auth_test/
+ln -s ~/mod-users/target mod-users
 ```
 
 ## Initialize MongoDB with our testing data
