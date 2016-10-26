@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.folio.auth.authentication_module_test;
+package org.folio.auth.login_module_test;
 
-import org.folio.auth.authentication_module.AuthResult;
-import org.folio.auth.authentication_module.AuthUtil;
-import org.folio.auth.authentication_module.impl.MongoAuthSource;
+import org.folio.auth.login_module.AuthResult;
+import org.folio.auth.login_module.AuthUtil;
+import org.folio.auth.login_module.impl.MongoAuthSource;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;

@@ -3,11 +3,11 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.folio.auth.authentication_module.impl;
+package org.folio.auth.login_module.impl;
 
-import org.folio.auth.authentication_module.AuthResult;
-import org.folio.auth.authentication_module.AuthSource;
-import org.folio.auth.authentication_module.AuthUtil;
+import org.folio.auth.login_module.AuthResult;
+import org.folio.auth.login_module.AuthSource;
+import org.folio.auth.login_module.AuthUtil;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -22,7 +22,7 @@ import io.vertx.core.logging.LoggerFactory;
 public class MongoAuthSource implements AuthSource {
   private final MongoClient mongoClient;
   private AuthUtil authUtil;
-  private final Logger logger = LoggerFactory.getLogger("mod-auth-authentication-module");
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-login-module");
   
   public MongoAuthSource(MongoClient mongoClient, AuthUtil authUtil) {
     this.mongoClient = mongoClient;

@@ -3,10 +3,10 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.folio.auth.authentication_module;
+package org.folio.auth.login_module;
 
-import org.folio.auth.authentication_module.impl.DummyAuthSource;
-import org.folio.auth.authentication_module.impl.MongoAuthSource;
+import org.folio.auth.login_module.impl.DummyAuthSource;
+import org.folio.auth.login_module.impl.MongoAuthSource;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClient;
@@ -36,7 +36,7 @@ public class MainVerticle extends AbstractVerticle {
   private String okapiUrl;
   private String authApiKey;
   private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
-  private final Logger logger = LoggerFactory.getLogger("mod-auth-authentication-module");
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-login-module");
 
   @Override
   public void start(Future<Void> future) {
@@ -53,7 +53,7 @@ public class MainVerticle extends AbstractVerticle {
     if(logLevel != null) {
       try {
         org.apache.log4j.Logger l4jLogger;
-        l4jLogger = org.apache.log4j.Logger.getLogger("mod-auth-authentication-module");
+        l4jLogger = org.apache.log4j.Logger.getLogger("mod-auth-login-module");
         l4jLogger.getParent().setLevel(org.apache.log4j.Level.toLevel(logLevel));
       } catch(Exception e) {
         logger.error("Unable to set log level: " + e.getMessage());
