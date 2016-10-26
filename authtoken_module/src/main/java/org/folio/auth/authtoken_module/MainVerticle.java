@@ -1,8 +1,8 @@
-package org.folio.auth.authorization_module;
+package org.folio.auth.authtoken_module;
 
-import org.folio.auth.authorization_module.PermissionsSource;
-import org.folio.auth.authorization_module.impl.DummyPermissionsSource;
-import org.folio.auth.authorization_module.impl.ModulePermissionsSource;
+import org.folio.auth.authtoken_module.PermissionsSource;
+import org.folio.auth.authtoken_module.impl.DummyPermissionsSource;
+import org.folio.auth.authtoken_module.impl.ModulePermissionsSource;
 import com.sun.xml.internal.messaging.saaj.util.Base64;
 import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
@@ -62,7 +62,7 @@ public class MainVerticle extends AbstractVerticle {
   PermissionsSource permissionsSource;
   private String authApiKey;
   private String okapiUrl;
-  private final Logger logger = LoggerFactory.getLogger("mod-auth-authorization-module");
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-authtoken-module");
  
   public void start(Future<Void> future) {
     Router router = Router.router(vertx);
@@ -79,7 +79,7 @@ public class MainVerticle extends AbstractVerticle {
     if(logLevel != null) {
       try {
         org.apache.log4j.Logger l4jLogger;
-        l4jLogger = org.apache.log4j.Logger.getLogger("mod-auth-authorization-module");
+        l4jLogger = org.apache.log4j.Logger.getLogger("mod-auth-authtoken-module");
         l4jLogger.getParent().setLevel(org.apache.log4j.Level.toLevel(logLevel));
       } catch(Exception e) {
         logger.error("Unable to set log level: " + e.getMessage());

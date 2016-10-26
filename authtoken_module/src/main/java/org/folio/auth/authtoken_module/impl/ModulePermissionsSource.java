@@ -3,9 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package org.folio.auth.authorization_module.impl;
+package org.folio.auth.authtoken_module.impl;
 
-import org.folio.auth.authorization_module.PermissionsSource;
+import org.folio.auth.authtoken_module.PermissionsSource;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClient;
@@ -26,7 +26,7 @@ public class ModulePermissionsSource implements PermissionsSource {
   private String requestToken;
   private String authApiKey = "";
   private String tenant;
-  private final Logger logger = LoggerFactory.getLogger("mod-auth-authorization-module");
+  private final Logger logger = LoggerFactory.getLogger("mod-auth-authtoken-module");
   
   public ModulePermissionsSource(Vertx vertx) {
     //permissionsModuleUrl = url;

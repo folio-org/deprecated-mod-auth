@@ -7,9 +7,9 @@
     <version>0.1-SNAPSHOT</version>
     <name>Mod Auth Parent POM</name>
     <modules>
-        <module>authorization_module</module>
         <module>permissions_module</module>
         <module>login_module</module>
+        <module>authtoken_module</module>
     </modules>
     <build>
         <pluginManagement>
