@@ -24,6 +24,7 @@ import io.vertx.ext.web.handler.BodyHandler;
 import java.security.Key;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
+import org.folio.auth.authentication_module.impl.DummyUserSource;
 
 /**
  *
@@ -37,6 +38,7 @@ public class MainVerticle extends AbstractVerticle {
   private String authApiKey;
   private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
   private final Logger logger = LoggerFactory.getLogger("mod-auth-authentication-module");
+  private UserSource userSource;
 
   @Override
   public void start(Future<Void> future) {
@@ -48,6 +50,7 @@ public class MainVerticle extends AbstractVerticle {
     String mongoURL = System.getProperty("mongo.url", "mongodb://localhost:27017/test");
     mongoClient = MongoClient.createShared(vertx, new JsonObject().put("connection_string", mongoURL));
     authSource = new MongoAuthSource(mongoClient, authUtil);
+    userSource = new DummyUserSource();
     
     String logLevel = System.getProperty("log.level", null);
     if(logLevel != null) {
@@ -109,35 +112,47 @@ public class MainVerticle extends AbstractVerticle {
                 .end("Bad credentials format: Must be JSON formatted with 'username' and 'password' fields");
         return;
       } else {
-        logger.debug("Checking AuthResult");
-        AuthResult authResult = res.result();
-        if(!authResult.getSuccess()) {
-          ctx.response()
-                  .setStatusCode(403)
-                  .end("Invalid credentials");
-        } else {
-          //String token = Jwts.builder().setSubject(authResult.getUser()).signWith(JWTAlgorithm, JWTSigningKey).compact();
-          logger.debug("Authentication successful, getting signed token for login");
-          JsonObject payload = new JsonObject()
-                  .put("sub", authResult.getUser()); 
-          //TODO: Debug and handle failure case
-          String tokenUrl = okapiUrl + "/token";
-          //System.out.println("Attempting to fetch token from url " + tokenUrl);
-          fetchToken(payload, tokenUrl, requestToken, tenant).setHandler(result -> {
-            if(result.failed()) {
-               ctx.response()
-                       .setStatusCode(500)
-                       .end("Unable to create token");
-               logger.error("Fetching token failed due to " + result.cause().getMessage());
-            } else {
-              String token = result.result();
+        userSource.getUser(res.result().getUser()).setHandler(res2 -> {
+          if(res2.failed()) {
+            ctx.response()
+                    .setStatusCode(500)
+                    .end("Unable to verify user");
+          } else if(!res2.result().userExists() || !res2.result().isActive()) {
+            ctx.response()
+                    .setStatusCode(403)
+                    .end("Invalid user");
+          } else {
+            logger.debug("Checking AuthResult");
+            AuthResult authResult = res.result();
+            if(!authResult.getSuccess()) {
               ctx.response()
-                    .putHeader("Authorization", token)
-                    .setStatusCode(200)
-                    .end(postContent); 
+                      .setStatusCode(403)
+                      .end("Invalid credentials");
+            } else {
+              //String token = Jwts.builder().setSubject(authResult.getUser()).signWith(JWTAlgorithm, JWTSigningKey).compact();
+              logger.debug("Authentication successful, getting signed token for login");
+              JsonObject payload = new JsonObject()
+                      .put("sub", authResult.getUser()); 
+              //TODO: Debug and handle failure case
+              String tokenUrl = okapiUrl + "/token";
+              //System.out.println("Attempting to fetch token from url " + tokenUrl);
+              fetchToken(payload, tokenUrl, requestToken, tenant).setHandler(result -> {
+                if(result.failed()) {
+                   ctx.response()
+                           .setStatusCode(500)
+                           .end("Unable to create token");
+                   logger.error("Fetching token failed due to " + result.cause().getMessage());
+                } else {
+                  String token = result.result();
+                  ctx.response()
+                        .putHeader("Authorization", token)
+                        .setStatusCode(200)
+                        .end(postContent); 
+                }
+              });
             }
-          });
-        }
+          }
+        });
       }
     });    
   }
