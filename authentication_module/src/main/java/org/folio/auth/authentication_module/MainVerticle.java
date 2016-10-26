@@ -25,6 +25,7 @@ import java.security.Key;
 import javax.crypto.spec.SecretKeySpec;
 import javax.xml.bind.DatatypeConverter;
 import org.folio.auth.authentication_module.impl.DummyUserSource;
+import org.folio.auth.authentication_module.impl.ModuleUserSource;
 
 /**
  *
@@ -34,10 +35,12 @@ public class MainVerticle extends AbstractVerticle {
   private AuthSource authSource = null;
   private AuthUtil authUtil;
   private MongoClient mongoClient;
-  private String okapiUrl;
+  //private String okapiUrl;
   private String authApiKey;
   private static final String OKAPI_TOKEN_HEADER = "X-Okapi-Token";
+  private static final String OKAPI_URL_HEADER = "X-Okapi-URL";
   private final Logger logger = LoggerFactory.getLogger("mod-auth-authentication-module");
+  private boolean verifyUsers;
   private UserSource userSource;
 
   @Override
@@ -45,10 +48,11 @@ public class MainVerticle extends AbstractVerticle {
     //authSource = new DummyAuthSource();
     authUtil = new AuthUtil();
     authApiKey = System.getProperty("auth.api.key", "VERY_WEAK_KEY");
-    okapiUrl = System.getProperty("okapi.url", "http://localhost:9130");
+    //okapiUrl = System.getProperty("okapi.url", "http://localhost:9130");
     
     String mongoURL = System.getProperty("mongo.url", "mongodb://localhost:27017/test");
     mongoClient = MongoClient.createShared(vertx, new JsonObject().put("connection_string", mongoURL));
+    verifyUsers = Boolean.parseBoolean(System.getProperty("verify.users", "false"));
     authSource = new MongoAuthSource(mongoClient, authUtil);
     userSource = new DummyUserSource();
     
@@ -96,6 +100,7 @@ public class MainVerticle extends AbstractVerticle {
     final String postContent = ctx.getBodyAsString();
     String requestToken = getRequestToken(ctx);
     String tenant = ctx.request().headers().get("X-Okapi-Tenant");
+    String okapiUrl = getOkapiUrl(ctx);
     JsonObject json = null;
     try {
       json = new JsonObject(postContent);
@@ -112,6 +117,14 @@ public class MainVerticle extends AbstractVerticle {
                 .end("Bad credentials format: Must be JSON formatted with 'username' and 'password' fields");
         return;
       } else {
+        if(verifyUsers) {
+          ModuleUserSource moduleUserSource = new ModuleUserSource();
+          moduleUserSource.setTenant(tenant);
+          moduleUserSource.setVertx(vertx);
+          moduleUserSource.setRequestToken(getRequestToken(ctx));
+          moduleUserSource.setOkapiUrl(okapiUrl);
+          userSource = moduleUserSource;
+        }
         userSource.getUser(res.result().getUser()).setHandler(res2 -> {
           if(res2.failed()) {
             ctx.response()
@@ -258,4 +271,11 @@ public class MainVerticle extends AbstractVerticle {
     }
     return token;
   }  
+  
+  private String getOkapiUrl(RoutingContext ctx) {
+    if(ctx.request().getHeader(OKAPI_URL_HEADER) != null) {
+      return ctx.request().getHeader(OKAPI_URL_HEADER);
+    }
+    return "";
+  }
 }
