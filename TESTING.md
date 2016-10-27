@@ -92,9 +92,9 @@ ln -s ~/mod-users/target mod-users
 ## Initialize MongoDB with our testing data
 
 ```
-mongoimport -d test -c users ~/mod-auth/testing/mongo/users.json
-mongoimport -d test -c permissions ~/mod-auth/testing/mongo/permissions.json  
-mongoimport -d test -c credentials ~/mod-auth/testing/mongo/credentials.json 
+mongoimport --drop -d test -c users ~/mod-auth/testing/mongo/users.json
+mongoimport --drop -d test -c permissions ~/mod-auth/testing/mongo/permissions.json  
+mongoimport --drop -d test -c credentials ~/mod-auth/testing/mongo/credentials.json 
 ```
 
 ## Run the script to load the modules
