@@ -6,7 +6,7 @@ java -jar okapi/okapi-core-fat.jar dev &> /tmp/okapi_out.log &
 export OKAPI_PID=$!
 
 #Give Okapi a few seconds to spin up
-sleep 3
+sleep 6
 
 #Create our tenant
 curl -w '\n' -X POST -D - \
@@ -138,6 +138,16 @@ curl -w '\n' -X POST -D - \
     -d @./tenant_associations/retrieve.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
+echo "Adding the users to mod-users"
+for f in ./users/*
+do
+    echo processing $f
+    curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -H "X-Okapi-Tenant: diku" \
+    -d @$f \
+    http://localhost:9130/users
+done
 
 
 echo "Okapi process id is $OKAPI_PID"

@@ -15,7 +15,7 @@ import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 import org.folio.auth.authentication_module.UserResult;
 import org.folio.auth.authentication_module.UserSource;
-
+import java.net.URLEncoder;
 /**
  *
  * @author kurt
@@ -40,13 +40,20 @@ public class ModuleUserSource implements UserSource {
     HttpClient client = vertx.createHttpClient(options);
     JsonObject query = new JsonObject()
             .put("username", username);
-    String requestUrl = okapiUrl + "users/?query=" + query.encode();
+    String requestUrl = null;
+    try {
+      requestUrl = okapiUrl + "/users/?query=" + URLEncoder.encode(query.encode(), "UTF-8");
+    } catch(Exception e) {
+      future.fail(e);
+      return future;
+    }
     logger.debug("Requesting userdata from URL at " + requestUrl);
     client.getAbs(requestUrl, res -> {
       if(res.statusCode() != 200) {
         future.fail("Got status code " + res.statusCode());
       } else {
         res.bodyHandler(buf -> {
+          logger.debug("Got content from server: " + buf.toString());
           JsonObject result = buf.toJsonObject();
           if(result.getInteger("total_records") > 1) {
             future.fail("Not unique username");
@@ -54,7 +61,7 @@ public class ModuleUserSource implements UserSource {
             UserResult userResult = new UserResult(username, false);
             future.complete(userResult);
           } else {
-            UserResult userResult = new UserResult(username, true, result.getBoolean("active"));
+            UserResult userResult = new UserResult(username, true, result.getJsonArray("users").getJsonObject(0).getBoolean("active"));
             future.complete(userResult);
           }
         });
@@ -62,6 +69,8 @@ public class ModuleUserSource implements UserSource {
     })
             .putHeader("X-Okapi-Tenant", tenant)
             .putHeader("Authorization", "Bearer " + requestToken)
+            .putHeader("Content-type", "application/json")
+            .putHeader("Accept", "application/json")
             .end();
     return future;
   }
