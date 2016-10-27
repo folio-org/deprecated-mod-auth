@@ -1,0 +1,37 @@
+{
+    "id" : "users-module",
+    "name" : "users",
+    "provides" : [
+        {
+            "id" : "users",
+            "version" : "0.0.1"
+        }
+    ],
+    "routingEntries" : [
+        {
+            "methods" : [ "GET" ],
+            "path" : "/users",
+            "level" : "30",
+            "type" : "request-response"
+        },
+        {
+            "methods" : [ "POST" ],
+            "path" : "/users",
+            "level" : "30",
+            "type" : "request-response"
+        },
+        {
+            "methods" : [ "PUT" ],
+            "path" : "/users",
+            "level" : "30",
+            "type" : "request-response"
+        },
+        {
+            "methods" : [ "DELETE" ],
+            "path" : "/users",
+            "level" : "30",
+            "type" : "request-response"
+        }
+    ],
+    "modulePermissions" : []
+}
