@@ -49,8 +49,8 @@ mvn clean install
 cd ~
 git clone https://github.com/folio-org/mod-auth.git
 cd mod-auth
-cd authentication_module && mvn clean install
-cd ../authorization_module && mvn clean install
+cd login_module && mvn clean install
+cd ../authtoken_module && mvn clean install
 cd ../permissions_module && mvn clean install
 ```
 

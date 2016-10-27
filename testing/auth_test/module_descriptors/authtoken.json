@@ -1,9 +1,9 @@
 {
-    "id" : "authorization-module",
-    "name" : "authorization",
+    "id" : "authtoken-module",
+    "name" : "authtoken",
     "provides" : [
         {
-            "id" : "authorization",
+            "id" : "authtoken",
             "version" : "0.0.1"
         }
     ],

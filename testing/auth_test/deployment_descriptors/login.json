@@ -1,0 +1,7 @@
+{
+    "srvcId" : "login-module",
+    "nodeId" : "localhost",
+    "descriptor" : {
+        "exec" : "java -jar -Dlog.level=debug -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dport=%p -jar ../../login_module/target/login_module-fat.jar"
+    }
+}

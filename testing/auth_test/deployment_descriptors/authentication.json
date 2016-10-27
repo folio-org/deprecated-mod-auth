@@ -1,7 +1,0 @@
-{
-    "srvcId" : "authentication-module",
-    "nodeId" : "localhost",
-    "descriptor" : {
-        "exec" : "java -jar -Dlog.level=debug -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dport=%p -jar ../../authentication_module/target/authentication_module-fat.jar"
-    }
-}

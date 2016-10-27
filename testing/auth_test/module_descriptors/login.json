@@ -1,9 +1,9 @@
 {
-    "id" : "authentication-module",
-    "name" : "authentication",
+    "id" : "login-module",
+    "name" : "login",
     "provides" : [
         {
-            "id" : "authentication",
+            "id" : "login",
             "version" : "0.0.1"
         }
     ],
@@ -19,21 +19,21 @@
             "path" : "/authn/users",
             "level" : "30",
             "type" : "request-response",
-            "permissionsRequired" : [ "authentication.adduser" ]
+            "permissionsRequired" : [ "login.adduser" ]
         },
         {
             "methods" : [ "PUT" ],
             "path" : "/authn/users",
             "level" : "30",
             "type" : "request-response",
-            "permissionsRequired" : [ "authentication.modifyUser" ]
+            "permissionsRequired" : [ "login.modifyUser" ]
         },
         {
             "methods" : [ "DELETE" ],
             "path" : "/authn/users",
             "level" : "30",
             "type" : "request-response",
-            "permissionsRequired" : [ "authentication.removeUser" ]
+            "permissionsRequired" : [ "login.removeUser" ]
         }
     ],
     "modulePermissions" : [ "auth.signtoken" ]
