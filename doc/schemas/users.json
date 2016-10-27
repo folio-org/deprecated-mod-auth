@@ -1,0 +1,15 @@
+{
+    "title" : "Permissions User Schema",
+    "type" : "object",
+    "properties" : {
+        "username" : {
+            "type" : "string"
+        },
+        "tenant" : { 
+            "type" : "string"
+        },
+        "permissions" : {
+            "type" : "array"
+        },
+    }
+}
