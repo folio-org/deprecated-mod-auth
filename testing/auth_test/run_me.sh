@@ -1,6 +1,6 @@
 #!/bin/bash
 
-########
+#######
 echo "Starting Okapi"
 java -jar okapi/okapi-core-fat.jar dev &> /tmp/okapi_out.log &
 export OKAPI_PID=$!
