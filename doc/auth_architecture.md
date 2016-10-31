@@ -22,7 +22,7 @@ Any given permission can contain a number of other permissions as "sub-permissio
 
 ## Interactions
 
-1. The Auth/N module, upon completing a sucessful "login", calls the /token endpoint of the Auth/Z module in order to request a new token to give to the user. The /token endpoint is privileged, and requires the use of a shared secret, set at module deployment.
+1. The Auth/N module, upon completing a successful "login", calls the /token endpoint of the Auth/Z module in order to request a new token to give to the user. The /token endpoint is privileged, and requires the use of a shared secret, set at module deployment.
 2. It is possible that the Auth/N module may need to make changes to the Permissions of a user, based on information received during login. An example of this might be if a SAML permissions crosswalk has been defined, or if we are allow permissions to be managed using LDAP. Again, this interaction requires passing a shared secret.
 3. The Auth/Z module relies on the Permissions module in order to retrieve the permissions granted to a given user when the JWT is verified.
 
@@ -30,7 +30,7 @@ Any given permission can contain a number of other permissions as "sub-permissio
 
 Because the Auth modules need privileged access to each other, they must be given a shared secret when the modules are started. They are able to use this secret as an API key to verify themselves to each other, as the normal Auth mechanism can't be relied upon until the Auth chain is bootstrapped.
 
-The Permissions module is currently being built to use MongoDB as a backend for storing permissions, but as the Domain Models mature and stabilize, it will ideally use storage provided by Folio's own storage layer.
+The Permissions module is currently being built to use MongoDB as a backend for storing permissions, but as the Domain Models mature and stabilize, it will ideally use storage provided by FOLIO's own storage layer.
 
 
 
