@@ -14,9 +14,9 @@ The Auth/N module provides an endpoint for a user to obtain a valid JWT. The "de
 
 ## Permissions
 
-This module is responsible for two things: Storing the heirarchy of a given permission, and returning the list of permissions assigned to a given user of the system. It does not store module permissions, which are defined in the module descriptors and brokered by Okapi itself.
+This module is responsible for two things: Storing the hierarchy of a given permission, and returning the list of permissions assigned to a given user of the system. It does not store module permissions, which are defined in the module descriptors and brokered by Okapi itself.
 
-Any given permission can contain a number of other permissions as "sub-permissions." When permissions are evalauated, they are returned as a list of all permissions included. In this manner, a permission can act as a simple permisison bit, or as a broader "role."
+Any given permission can contain a number of other permissions as "sub-permissions." When permissions are evaluated, they are returned as a list of all permissions included. In this manner, a permission can act as a simple permission bit, or as a broader "role."
 
 ![Auth Modules Diagram](auth_modules.png "Auth Modules")
 
