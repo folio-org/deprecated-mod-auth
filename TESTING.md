@@ -88,9 +88,13 @@ ln -s ~/okapi/okapi-core/target okapi
 cd ~/mod-auth/testing/auth_test/
 ln -s ~/mod-users/target mod-users
 ```
+## Add our systemd entry for MongoDB and start it up
+```
+sudo cp ~/mod-auth/testing/mongo/mongodb.service /etc/systemd/system/
+sudo systemctl start mongodb
+```
 
 ## Initialize MongoDB with our testing data
-
 ```
 mongoimport --drop -d test -c users ~/mod-auth/testing/mongo/users.json
 mongoimport --drop -d test -c permissions ~/mod-auth/testing/mongo/permissions.json  
@@ -98,7 +102,6 @@ mongoimport --drop -d test -c credentials ~/mod-auth/testing/mongo/credentials.j
 ```
 
 ## Run the script to load the modules
-
 ```
 cd ~/mod-auth/testing/auth_test/
 ./run_me.sh
