@@ -31,7 +31,14 @@
             "path" : "/users",
             "level" : "30",
             "type" : "request-response"
+        },
+        {
+	        "methods" : [ "POST", "DELETE" ],
+            "path" : "/tenant",
+            "level" : "30",
+            "type" : "request-response"
         }
+
     ],
     "modulePermissions" : []
 }
