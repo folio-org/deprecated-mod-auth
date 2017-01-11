@@ -136,6 +136,12 @@ curl -w '\n' -X POST -D - \
     -d @./tenant_associations/retrieve.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
+echo "Registering the \"diku\" tenant with mod-users"
+curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -H "X-Okapi-Tenant: diku" \
+    http://localhost:9130/tenant
+
 echo "Adding the users to mod-users"
 for f in ./users/*
 do
