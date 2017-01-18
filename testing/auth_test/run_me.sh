@@ -2,7 +2,7 @@
 
 #######
 echo "Starting Okapi"
-java -jar okapi/okapi-core-fat.jar dev &> /tmp/okapi_out.log &
+java -jar -Dloglevel=DEBUG okapi/okapi-core-fat.jar dev &> /tmp/okapi_out.log &
 export OKAPI_PID=$!
 echo Okapi PID is $OKAPI_PID
 sleep 6  #Give Okapi a few seconds to spin up
@@ -30,6 +30,7 @@ curl -w '\n' -D - -s \
 echo "Adding the Permissions module to our tenant"
 curl -w '\n' -X POST -D - \
     -H "Content-type: application/json" \
+    -X "X-Okapi-Tenant: diku" \
     -d @./tenant_associations/mod-users.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
@@ -136,11 +137,10 @@ curl -w '\n' -X POST -D - \
     -d @./tenant_associations/retrieve.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
-echo "Registering the \"diku\" tenant with mod-users"
-curl -w '\n' -X POST -D - \
+echo "Activating debug logging in the mod-users module"
+curl -w '\n' -X PUT -D - \
     -H "Content-type: application/json" \
-    -H "X-Okapi-Tenant: diku" \
-    http://localhost:9130/tenant
+    http://localhost:9130/admin/loglevel?level=FINE
 
 echo "Adding the users to mod-users"
 for f in ./users/*

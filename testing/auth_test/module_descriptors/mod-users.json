@@ -33,12 +33,13 @@
             "type" : "request-response"
         },
         {
-	        "methods" : [ "POST", "DELETE" ],
-            "path" : "/tenant",
+	        "methods" : [ "PUT" ],
+            "path" : "/admin",
             "level" : "30",
             "type" : "request-response"
         }
 
     ],
-    "modulePermissions" : []
+    "modulePermissions" : [],
+    "tenantInterface" : "/_/tenant"
 }
