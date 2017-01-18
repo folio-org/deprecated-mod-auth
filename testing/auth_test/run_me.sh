@@ -27,10 +27,10 @@ curl -w '\n' -D - -s \
     -d @./deployment_descriptors/mod-users.json \
     http://localhost:9130/_/discovery/modules
 
-echo "Adding the Permissions module to our tenant"
+echo "Adding the Users module to our tenant"
 curl -w '\n' -X POST -D - \
     -H "Content-type: application/json" \
-    -X "X-Okapi-Tenant: diku" \
+    -H "X-Okapi-Tenant: diku" \
     -d @./tenant_associations/mod-users.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
