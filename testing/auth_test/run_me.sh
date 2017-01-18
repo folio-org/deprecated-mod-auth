@@ -140,6 +140,7 @@ curl -w '\n' -X POST -D - \
 echo "Activating debug logging in the mod-users module"
 curl -w '\n' -X PUT -D - \
     -H "Content-type: application/json" \
+    -H "X-Okapi-Tenant: diku" \
     http://localhost:9130/admin/loglevel?level=FINE
 
 echo "Adding the users to mod-users"
