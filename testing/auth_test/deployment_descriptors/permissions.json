@@ -2,6 +2,6 @@
     "srvcId" : "permissions-module",
     "nodeId" : "localhost",
     "descriptor" : {
-        "exec" : "java -jar -Dlog.level=debug -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dport=%p -jar ../../permissions_module/target/permissions_module-fat.jar"
+        "exec" : "java -jar ../../permissions-module-fat.jar -Dhttp.port=%p db_connection=/home/vagrant/mod-auth/testing/postgres/permissions/pg_options.json"
     }
 }
