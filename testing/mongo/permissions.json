@@ -1,4 +1,4 @@
-{ "_id" : { "$oid" : "57d2cf150a1f63eae94d3b00" }, "permission_name" : "thing.read", "tenant" : "diku", "sub_permissions" : [] }
+{ "_id" : { "$oid" : "58d2cf150a1f63eae94d3b00" }, "permission_name" : "thing.read", "tenant" : "diku", "sub_permissions" : [] }
 { "_id" : { "$oid" : "57d2cf3d0a1f63eae94d3b01" }, "permission_name" : "thing.create", "tenant" : "diku", "sub_permissions" : [] }
 { "_id" : { "$oid" : "57d2cf490a1f63eae94d3b02" }, "permission_name" : "thing.edit", "tenant" : "diku", "sub_permissions" : [] }
 { "_id" : { "$oid" : "57d2cf530a1f63eae94d3b03" }, "permission_name" : "thing.delete", "tenant" : "diku", "sub_permissions" : [] }
@@ -14,3 +14,8 @@
 { "_id" : { "$oid" : "57e01b1843ed636513395e90" }, "permission_name" : "perms.users", "tenant" : "diku", "sub_permissions" : [ "perms.users.create", "perms.users.read", "perms.users.delete" ] }
 { "_id" : { "$oid" : "57e01b3e43ed636513395e91" }, "permission_name" : "perms", "tenant" : "diku", "sub_permissions" : [ "perms.users", "perms.permissions" ] }
 { "_id" : { "$oid" : "57e983409d5854b6eb7f57ff" }, "permission_name" : "retrieve.read", "tenant" : "diku", "sub_permissions" : [] }
+{ "permission_name" : "login.addUser", "tenant" : "diku", "sub_permissions" : [] }
+{ "permission_name" : "login.readUser", "tenant" : "diku", "sub_permissions" : [] }
+{ "permission_name" : "login.modifyUser", "tenant" : "diku", "sub_permissions" : [] }
+{ "permission_name" : "login.removeUser", "tenant" : "diku", "sub_permissions" : [] }
+{ "permission_name" : "login", "tenant" : "diku", "sub_permissions" : ["login.addUser", "login.modifyUser", "login.removeUser", "login.readUser"] }
