@@ -26,7 +26,7 @@ echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" 
 
 ```
 sudo apt-get update
-sudo apt-get install curl default-jdk git maven nodejs npm mongodb-org postgresql
+sudo apt-get install curl default-jdk git maven nodejs npm mongodb-org postgresql postgresql-contrib
 ```
 
 ## Update nodejs to the the newer version
