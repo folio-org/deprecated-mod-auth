@@ -99,14 +99,6 @@ sudo systemctl start mongodb
 mongoimport --drop -d test -c credentials ~/mod-auth/testing/mongo/credentials.json 
 ```
 
-## Setup Postgres with our user and testing data
-```
-sudo -u postgres bash -c "psql -c \"CREATE USER dbuser WITH SUPERUSER PASSWORD 'qwerty';\""
-sudo -u postgres bash -c "psql -c \"CREATE USER diku WITH PASSWORD 'diku';\""
-sudo -u postgres bash -c "psql -c \"CREATE DATABASE permissions WITH OWNER=dbuser;\""
-sudo -u postgres bash -c "psql permissions < /home/vagrant/mod-auth/testing/postgres/permissions/permissions.sql"
-```
-
 ## Run the script to load the modules
 ```
 cd ~/mod-auth/testing/auth_test/
