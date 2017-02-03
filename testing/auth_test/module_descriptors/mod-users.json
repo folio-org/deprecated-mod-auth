@@ -5,6 +5,10 @@
         {
             "id" : "users",
             "version" : "0.0.1"
+        },
+        {
+            "id" : "_tenant",
+            "version" : "0.0.1"
         }
     ],
     "routingEntries" : [
@@ -40,6 +44,5 @@
         }
 
     ],
-    "modulePermissions" : [],
-    "tenantInterface" : "/_/tenant"
+    "modulePermissions" : []
 }

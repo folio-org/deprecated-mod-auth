@@ -74,7 +74,11 @@ public class ModulePermissionsSource implements PermissionsSource {
           logger.debug("Got permissions: " + permissionsObject.getJsonArray("permissionNames").encodePrettily());
           future.complete(permissionsObject.getJsonArray("permissionNames"));
         });
-      } else {
+      } else if (res.statusCode() == 404) {
+        logger.debug("Unable to locate a user " + username + " from permissions source");
+        future.complete(new JsonArray());
+      } 
+      else { 
         //future.fail("Unable to retrieve permissions");
         res.bodyHandler(res2 -> {
           logger.debug("Unable to retrieve permissions (code " + res.statusCode() + "): " + res2.toString());
