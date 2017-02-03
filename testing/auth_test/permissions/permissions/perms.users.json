@@ -1,0 +1,1 @@
+{"tags": [], "permission_name": "perms.users", "sub_permissions": ["perms.users.create", "perms.users.read", "perms.users.delete"]}
