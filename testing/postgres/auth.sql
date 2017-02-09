@@ -17,10 +17,7 @@ SET row_security = off;
 -- Name: diku; Type: SCHEMA; Schema: -; Owner: diku
 --
 
-CREATE SCHEMA diku;
 
-
-ALTER SCHEMA diku OWNER TO diku;
 
 --
 -- Name: diku_login_module; Type: SCHEMA; Schema: -; Owner: diku_login_module
@@ -68,77 +65,6 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto WITH SCHEMA public;
 COMMENT ON EXTENSION pgcrypto IS 'cryptographic functions';
 
 
-SET search_path = diku, pg_catalog;
-
-SET default_tablespace = '';
-
-SET default_with_oids = false;
-
---
--- Name: permissions; Type: TABLE; Schema: diku; Owner: dbuser
---
-
-CREATE TABLE permissions (
-    _id integer NOT NULL,
-    jsonb jsonb NOT NULL
-);
-
-
-ALTER TABLE permissions OWNER TO dbuser;
-
---
--- Name: permissions__id_seq; Type: SEQUENCE; Schema: diku; Owner: dbuser
---
-
-CREATE SEQUENCE permissions__id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE permissions__id_seq OWNER TO dbuser;
-
---
--- Name: permissions__id_seq; Type: SEQUENCE OWNED BY; Schema: diku; Owner: dbuser
---
-
-ALTER SEQUENCE permissions__id_seq OWNED BY permissions._id;
-
-
---
--- Name: permissions_users; Type: TABLE; Schema: diku; Owner: dbuser
---
-
-CREATE TABLE permissions_users (
-    _id integer NOT NULL,
-    jsonb jsonb NOT NULL
-);
-
-
-ALTER TABLE permissions_users OWNER TO dbuser;
-
---
--- Name: permissions_users__id_seq; Type: SEQUENCE; Schema: diku; Owner: dbuser
---
-
-CREATE SEQUENCE permissions_users__id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
-
-
-ALTER TABLE permissions_users__id_seq OWNER TO dbuser;
-
---
--- Name: permissions_users__id_seq; Type: SEQUENCE OWNED BY; Schema: diku; Owner: dbuser
---
-
-ALTER SEQUENCE permissions_users__id_seq OWNED BY permissions_users._id;
-
 
 SET search_path = diku_login_module, pg_catalog;
 
@@ -179,52 +105,6 @@ CREATE TABLE permissions_users (
 
 
 ALTER TABLE permissions_users OWNER TO dbuser;
-
-SET search_path = diku, pg_catalog;
-
---
--- Name: _id; Type: DEFAULT; Schema: diku; Owner: dbuser
---
-
-ALTER TABLE ONLY permissions ALTER COLUMN _id SET DEFAULT nextval('permissions__id_seq'::regclass);
-
-
---
--- Name: _id; Type: DEFAULT; Schema: diku; Owner: dbuser
---
-
-ALTER TABLE ONLY permissions_users ALTER COLUMN _id SET DEFAULT nextval('permissions_users__id_seq'::regclass);
-
-
---
--- Data for Name: permissions; Type: TABLE DATA; Schema: diku; Owner: dbuser
---
-
-COPY permissions (_id, jsonb) FROM stdin;
-\.
-
-
---
--- Name: permissions__id_seq; Type: SEQUENCE SET; Schema: diku; Owner: dbuser
---
-
-SELECT pg_catalog.setval('permissions__id_seq', 1, false);
-
-
---
--- Data for Name: permissions_users; Type: TABLE DATA; Schema: diku; Owner: dbuser
---
-
-COPY permissions_users (_id, jsonb) FROM stdin;
-\.
-
-
---
--- Name: permissions_users__id_seq; Type: SEQUENCE SET; Schema: diku; Owner: dbuser
---
-
-SELECT pg_catalog.setval('permissions_users__id_seq', 1, false);
-
 
 SET search_path = diku_login_module, pg_catalog;
 
@@ -280,24 +160,6 @@ COPY permissions_users (_id, jsonb) FROM stdin;
 \.
 
 
-SET search_path = diku, pg_catalog;
-
---
--- Name: permissions_pkey; Type: CONSTRAINT; Schema: diku; Owner: dbuser
---
-
-ALTER TABLE ONLY permissions
-    ADD CONSTRAINT permissions_pkey PRIMARY KEY (_id);
-
-
---
--- Name: permissions_users_pkey; Type: CONSTRAINT; Schema: diku; Owner: dbuser
---
-
-ALTER TABLE ONLY permissions_users
-    ADD CONSTRAINT permissions_users_pkey PRIMARY KEY (_id);
-
-
 SET search_path = diku_login_module, pg_catalog;
 
 --
@@ -335,47 +197,6 @@ REVOKE ALL ON SCHEMA public FROM postgres;
 GRANT ALL ON SCHEMA public TO postgres;
 GRANT ALL ON SCHEMA public TO PUBLIC;
 
-
-SET search_path = diku, pg_catalog;
-
---
--- Name: permissions; Type: ACL; Schema: diku; Owner: dbuser
---
-
-REVOKE ALL ON TABLE permissions FROM PUBLIC;
-REVOKE ALL ON TABLE permissions FROM dbuser;
-GRANT ALL ON TABLE permissions TO dbuser;
-GRANT ALL ON TABLE permissions TO diku;
-
-
---
--- Name: permissions__id_seq; Type: ACL; Schema: diku; Owner: dbuser
---
-
-REVOKE ALL ON SEQUENCE permissions__id_seq FROM PUBLIC;
-REVOKE ALL ON SEQUENCE permissions__id_seq FROM dbuser;
-GRANT ALL ON SEQUENCE permissions__id_seq TO dbuser;
-GRANT ALL ON SEQUENCE permissions__id_seq TO diku;
-
-
---
--- Name: permissions_users; Type: ACL; Schema: diku; Owner: dbuser
---
-
-REVOKE ALL ON TABLE permissions_users FROM PUBLIC;
-REVOKE ALL ON TABLE permissions_users FROM dbuser;
-GRANT ALL ON TABLE permissions_users TO dbuser;
-GRANT ALL ON TABLE permissions_users TO diku;
-
-
---
--- Name: permissions_users__id_seq; Type: ACL; Schema: diku; Owner: dbuser
---
-
-REVOKE ALL ON SEQUENCE permissions_users__id_seq FROM PUBLIC;
-REVOKE ALL ON SEQUENCE permissions_users__id_seq FROM dbuser;
-GRANT ALL ON SEQUENCE permissions_users__id_seq TO dbuser;
-GRANT ALL ON SEQUENCE permissions_users__id_seq TO diku;
 
 
 SET search_path = diku_login_module, pg_catalog;
