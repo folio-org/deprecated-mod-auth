@@ -88,15 +88,12 @@ ln -s ~/okapi/okapi-core/target okapi
 cd ~/mod-auth/testing/auth_test/
 ln -s ~/mod-users/target mod-users
 ```
-## Add our systemd entry for MongoDB and start it up
-```
-sudo cp ~/mod-auth/testing/mongo/mongodb.service /etc/systemd/system/
-sudo systemctl start mongodb
-```
 
-## Initialize MongoDB with our testing data
-``` 
-mongoimport --drop -d test -c credentials ~/mod-auth/testing/mongo/credentials.json 
+## Initialize our Postgres data
+```
+sudo -u postgres bash -c "psql -c \"CREATE USER dbuser WITH SUPERUSER PASSWORD 'qwerty';\""
+sudo -u postgres bash -c "psql -c \"CREATE DATABASE auth WITH OWNER=dbuser;\""
+sudo -u postgres bash -c "psql auth < /home/vagrant/mod-auth/testing/postgres/auth.sql"
 ```
 
 ## Run the script to load the modules

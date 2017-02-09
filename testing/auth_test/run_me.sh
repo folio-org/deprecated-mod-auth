@@ -8,9 +8,9 @@ echo Okapi PID is $OKAPI_PID
 sleep 6  #Give Okapi a few seconds to spin up
 
 ##NASTY HACK TO DEAL WITH OKAPI/RMB TENANT INIT WEIRDNESS
-sudo -u postgres bash -c "psql -c \"DROP DATABASE permissions;\""
-sudo -u postgres bash -c "psql -c \"CREATE DATABASE permissions WITH OWNER=dbuser;\""
-sudo -u postgres bash -c "psql -c \"DROP ROLE diku_permissions_module;\""
+#sudo -u postgres bash -c "psql -c \"DROP DATABASE permissions;\""
+#sudo -u postgres bash -c "psql -c \"CREATE DATABASE permissions WITH OWNER=dbuser;\""
+#sudo -u postgres bash -c "psql -c \"DROP ROLE diku_permissions_module;\""
 ##END NASTY HACK
 
 echo "Creating our tenant"
@@ -160,26 +160,26 @@ do
     http://localhost:9130/users
 done
 
-echo "Populating the permissions module"
-for f in ./permissions/users/*
-do
-    echo processing $f
-    curl -w '\n' -X POST -D - \
-    -H "Content-type: application/json" \
-    -H "X-Okapi-Tenant: diku" \
-    -d @$f \
-    http://localhost:9130/perms/users
-done
-
-for f in ./permissions/permissions/*
-do
-    echo processing $f
-    curl -w '\n' -X POST -D - \
-    -H "Content-type: application/json" \
-    -H "X-Okapi-Tenant: diku" \
-    -d @$f \
-    http://localhost:9130/perms/permissions
-done
+#echo "Populating the permissions module"
+#for f in ./permissions/users/*
+#do
+#    echo processing $f
+#    curl -w '\n' -X POST -D - \
+#    -H "Content-type: application/json" \
+#    -H "X-Okapi-Tenant: diku" \
+#    -d @$f \
+#    http://localhost:9130/perms/users
+#done
+#
+#for f in ./permissions/permissions/*
+#do
+#    echo processing $f
+#    curl -w '\n' -X POST -D - \
+#    -H "Content-type: application/json" \
+#    -H "X-Okapi-Tenant: diku" \
+#    -d @$f \
+#    http://localhost:9130/perms/permissions
+#done
 
 echo "Okapi process id is $OKAPI_PID"
 #echo "Killing Okapi"

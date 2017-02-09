@@ -5,7 +5,11 @@
         {
             "id" : "login",
             "version" : "0.0.1"
-        }
+        },
+	{
+	    "id" : "_tenant",
+            "version" : "0.0.1"
+    	}
     ],
     "routingEntries" : [
         {
@@ -14,26 +18,29 @@
             "level" : "30",
             "type" : "request-response"
         },
+	 {
+            "methods" : [ "GET" ],
+            "path" : "/authn/credentials",
+            "level" : "30",
+            "type" : "request-response"
+        },
         {
             "methods" : [ "POST" ],
-            "path" : "/authn/users",
+            "path" : "/authn/credentials",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "login.adduser" ]
+            "type" : "request-response"
         },
         {
             "methods" : [ "PUT" ],
-            "path" : "/authn/users",
+            "path" : "/authn/credentials",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "login.modifyUser" ]
+            "type" : "request-response"
         },
         {
             "methods" : [ "DELETE" ],
-            "path" : "/authn/users",
+            "path" : "/authn/credentials",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "login.removeUser" ]
+            "type" : "request-response"
         }
     ],
     "modulePermissions" : [ "auth.signtoken" ]

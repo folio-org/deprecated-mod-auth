@@ -2,6 +2,6 @@
     "srvcId" : "login-module",
     "nodeId" : "localhost",
     "descriptor" : {
-        "exec" : "java -jar -Dverify.users=true -Dlog.level=debug -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dport=%p -jar ../../login_module/target/login_module-fat.jar"
+        "exec" : "java -jar ../../login_module/target/login-module-fat.jar -Dhttp.port=%p verify.user=true db_connection=/home/vagrant/mod-auth/testing/postgres/pg_options.json"
     }
 }
