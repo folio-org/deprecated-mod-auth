@@ -5,50 +5,48 @@
         {
             "id" : "permissions",
             "version" : "0.0.1"
-        }
+        },
+	{
+	   "id" : "_tenant",
+	   "version" : "0.0.1"
+        }	
     ],
     "routingEntries" : [
         {
             "methods" : [ "POST" ],
             "path" : "/perms/users",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "perms.users.create" ]
+            "type" : "request-response"
         },
         {
             "methods" : [ "GET" ],
             "path" : "/perms/users",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "perms.users.read" ]
+            "type" : "request-response"
         },
         {
             "methods" : [ "DELETE" ],
             "path" : "/perms/users",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "perms.users.delete" ]
+            "type" : "request-response"
         },
         {
             "methods" : [ "GET" ],
             "path" : "/perms/permissions",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "perms.permissions.read"]
+            "type" : "request-response"
         },
     {
             "methods" : [ "POST" ],
             "path" : "/perms/permissions",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "perms.permissions.create"]
+            "type" : "request-response"
         },
   {
             "methods" : [ "DELETE" ],
             "path" : "/perms/permissions",
             "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "perms.permissions.delete"]
+            "type" : "request-response"
         }
 
     ]

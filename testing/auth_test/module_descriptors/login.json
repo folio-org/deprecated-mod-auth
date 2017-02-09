@@ -14,19 +14,12 @@
             "level" : "30",
             "type" : "request-response"
         },
-	{
-	    "methods" : [ "GET" ],
-            "path" : "/authn/users",
-            "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "login.readUser" ]
-        },
         {
             "methods" : [ "POST" ],
             "path" : "/authn/users",
             "level" : "30",
             "type" : "request-response",
-            "permissionsRequired" : [ "login.addUser" ]
+            "permissionsRequired" : [ "login.adduser" ]
         },
         {
             "methods" : [ "PUT" ],
