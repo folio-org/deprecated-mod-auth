@@ -26,7 +26,7 @@ echo "deb http://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/3.2 multiverse" 
 
 ```
 sudo apt-get update
-sudo apt-get install curl default-jdk git maven nodejs npm mongodb-org
+sudo apt-get install curl default-jdk git maven nodejs npm mongodb-org postgresql
 ```
 
 ## Update nodejs to the the newer version
@@ -95,10 +95,16 @@ sudo systemctl start mongodb
 ```
 
 ## Initialize MongoDB with our testing data
-```
-mongoimport --drop -d test -c users ~/mod-auth/testing/mongo/users.json
-mongoimport --drop -d test -c permissions ~/mod-auth/testing/mongo/permissions.json  
+``` 
 mongoimport --drop -d test -c credentials ~/mod-auth/testing/mongo/credentials.json 
+```
+
+## Setup Postgres with our user and testing data
+```
+sudo -u postgres bash -c "psql -c \"CREATE USER dbuser WITH SUPERUSER PASSWORD 'qwerty';\""
+sudo -u postgres bash -c "psql -c \"CREATE USER diku WITH PASSWORD 'diku';\""
+sudo -u postgres bash -c "psql -c \"CREATE DATABASE permissions WITH OWNER=dbuser;\""
+sudo -u postgres bash -c "psql permissions < /home/vagrant/mod-auth/testing/postgres/permissions/permissions.sql"
 ```
 
 ## Run the script to load the modules

@@ -12,6 +12,7 @@ import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;
 
@@ -64,20 +65,22 @@ public class ModulePermissionsSource implements PermissionsSource {
       okapiUrlFinal = okapiUrl;
     }
     //String requestUrl = okapiUrlFinal + "perms/privileged/users/" + username + "/permissions";
-    String requestUrl = okapiUrlFinal + "perms/users/" + username + "/permissions";
+    String requestUrl = okapiUrlFinal + "perms/users/" + username + "/permissions?expanded=true";
     logger.debug("Requesting permissions from URL at " + requestUrl);
     HttpClientRequest req = client.getAbs(requestUrl, res-> {
       if(res.statusCode() == 200) {
         res.bodyHandler(res2 -> {
-          JsonArray permissions = new JsonArray(res2.toString());
-          future.complete(permissions);
+          JsonObject permissionsObject = new JsonObject(res2.toString());
+          logger.debug("Got permissions: " + permissionsObject.getJsonArray("permissionNames").encodePrettily());
+          future.complete(permissionsObject.getJsonArray("permissionNames"));
         });
       } else {
         //future.fail("Unable to retrieve permissions");
         res.bodyHandler(res2 -> {
-          System.out.println("Unable to retrieve permissions (code " + res.statusCode() + "): " + res2.toString());
+          logger.debug("Unable to retrieve permissions (code " + res.statusCode() + "): " + res2.toString());
         });
-        future.complete(new JsonArray());
+        //future.complete(new JsonArray());
+        future.fail("Unable to retrieve permissions (Status code" + res.statusCode() + ")");
       }
     });
     req.exceptionHandler(exception -> {
@@ -85,6 +88,8 @@ public class ModulePermissionsSource implements PermissionsSource {
     });
     req.headers().add("Authorization", "Bearer " + requestToken);
     req.headers().add("X-Okapi-Tenant", tenant);
+    req.headers().add("Content-Type", "application/json");
+    req.headers().add("Accept", "application/json");
     req.end();
     return future;
   }
