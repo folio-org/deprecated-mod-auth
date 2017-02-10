@@ -22,25 +22,29 @@
             "methods" : [ "GET" ],
             "path" : "/authn/credentials",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" :  ["login.readUser" ]
         },
         {
             "methods" : [ "POST" ],
             "path" : "/authn/credentials",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "login.addUser" ]
         },
         {
             "methods" : [ "PUT" ],
             "path" : "/authn/credentials",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "login.modifyUser" ]
         },
         {
             "methods" : [ "DELETE" ],
             "path" : "/authn/credentials",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "login.removeUser" ]
         }
     ],
     "modulePermissions" : [ "auth.signtoken" ]

@@ -16,37 +16,43 @@
             "methods" : [ "POST" ],
             "path" : "/perms/users",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "perms.users.create" ]
         },
         {
             "methods" : [ "GET" ],
             "path" : "/perms/users",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "perms.users.read" ]
         },
         {
             "methods" : [ "DELETE" ],
             "path" : "/perms/users",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "perms.users.delete" ]
         },
         {
             "methods" : [ "GET" ],
             "path" : "/perms/permissions",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "perms.permissions.read" ]
         },
     {
             "methods" : [ "POST" ],
             "path" : "/perms/permissions",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "perms.permissions.create" ]
         },
   {
             "methods" : [ "DELETE" ],
             "path" : "/perms/permissions",
             "level" : "30",
-            "type" : "request-response"
+            "type" : "request-response",
+            "permissionsRequired" : [ "perms.permissions.delete " ]
         }
 
     ]
