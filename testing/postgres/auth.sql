@@ -114,6 +114,7 @@ SET search_path = diku_login_module, pg_catalog;
 
 COPY auth_credentials (_id, jsonb) FROM stdin;
 acfee48a-b43e-4cdc-a3ba-6ab1928e718c	{"hash": "F4B3659457E73516B84FDA2DD92D69A3A76770FB", "salt": "B4FF9E7BD0AE71A04CA3978483CCB2A20111BC94", "username": "jill"}
+b1e2e3cf-1a97-4484-8930-e73b736eff75	{"hash": "F4B3659457E73516B84FDA2DD92D69A3A76770FB", "salt": "B4FF9E7BD0AE71A04CA3978483CCB2A20111BC94", "username": "shane"}
 \.
 
 
@@ -124,27 +125,27 @@ SET search_path = diku_permissions_module, pg_catalog;
 --
 
 COPY permissions (_id, jsonb) FROM stdin;
-75a463e1-5509-48c2-beaa-c2f510d3b0ee	{"tags": [], "permission_name": "login.addUser", "sub_permissions": []}
-011a44da-3f09-428c-8dc9-408a0bf12a38	{"tags": [], "permission_name": "login", "sub_permissions": ["login.addUser", "login.modifyUser", "login.removeUser", "login.readUser"]}
-0ad6600f-6865-4149-b60a-40c260cba2bd	{"tags": [], "permission_name": "login.modifyUser", "sub_permissions": []}
-fe8987fa-239c-4c06-9946-6ac728b6acf6	{"tags": [], "permission_name": "login.readUser", "sub_permissions": []}
-856ebd96-2a68-4ed7-badb-ae1dca0a55a7	{"tags": [], "permission_name": "login.removeUser", "sub_permissions": []}
-eac7dd73-86a4-4f28-8a92-aad97f9641b8	{"tags": [], "permission_name": "perms", "sub_permissions": ["perms.users", "perms.permissions"]}
-4c2552c5-b4ba-4d2d-92ef-482673db6094	{"tags": [], "permission_name": "perms.permissions.create", "sub_permissions": []}
-ef3a5fb2-db74-49e7-92b6-48aae9fc8f5a	{"tags": [], "permission_name": "perms.permissions.delete", "sub_permissions": []}
-6a3548ea-e8f4-4e15-bcae-14ced0af6e76	{"tags": [], "permission_name": "perms.permissions", "sub_permissions": ["perms.permissions.read", "perms.permissions.create", "perms.permissions.delete"]}
-f3c7324a-9f7f-4912-a8f9-e87f5eb12c51	{"tags": [], "permission_name": "perms.permissions.read", "sub_permissions": []}
-ee91a409-0b49-4646-898d-9176965feddd	{"tags": [], "permission_name": "retrieve.read", "sub_permissions": []}
-638f2852-0865-4097-829b-128ec31e644a	{"tags": [], "permission_name": "perms.users.create", "sub_permissions": []}
-40bf7a16-22b4-4434-a5bd-a0e1b43f47f7	{"tags": [], "permission_name": "perms.users.delete", "sub_permissions": []}
-b62f6a5b-6a0f-4ccf-8429-4ff099e98108	{"tags": [], "permission_name": "perms.users", "sub_permissions": ["perms.users.create", "perms.users.read", "perms.users.delete"]}
-90af90d1-d4ef-4d30-8584-2972938f427e	{"tags": [], "permission_name": "perms.users.read", "sub_permissions": []}
-ab0b3c86-53ee-4f93-b017-f6e21ca76a5b	{"tags": [], "permission_name": "thing.create", "sub_permissions": []}
-7ca7ebc2-6a93-45f9-9fb0-5a51565a1c15	{"tags": [], "permission_name": "thing.delete", "sub_permissions": []}
-a856ccb7-d283-4a75-9278-d2a1438a4781	{"tags": [], "permission_name": "thing.edit", "sub_permissions": []}
-17b8fb37-ea44-40e9-bfec-6fae074e4248	{"tags": [], "permission_name": "thing.read", "sub_permissions": []}
-017cb6eb-20ac-4dc9-94a9-a8449feaed8b	{"tags": [], "permission_name": "thing.see_sensitive", "sub_permissions": []}
-b2bf661d-209c-43a9-8851-a025238065fc	{"tags": [], "permission_name": "thing.super", "sub_permissions": ["thing.read", "thing.create", "thing.edit", "thing.delete", "thing.see_sensitive"]}
+75a463e1-5509-48c2-beaa-c2f510d3b0ee	{"id" : "8cd22acd-e347-4382-9344-42020f65bb86", "tags": [], "permissionName": "login.addUser", "subPermissions": []}
+011a44da-3f09-428c-8dc9-408a0bf12a38	{"id" : "a239a767-3c49-47c4-99e5-5485dc7ac8fd","tags": [], "permissionName": "login", "subPermissions": ["login.addUser", "login.modifyUser", "login.removeUser", "login.readUser"]}
+0ad6600f-6865-4149-b60a-40c260cba2bd	{"id" : "e8fd127f-19c6-406a-91b2-fbc601edb0ec","tags": [], "permissionName": "login.modifyUser", "subPermissions": []}
+fe8987fa-239c-4c06-9946-6ac728b6acf6	{"id" : "71d2aa6a-c39a-4e3c-b7ad-9548a1c8267d","tags": [], "permissionName": "login.readUser", "subPermissions": []}
+856ebd96-2a68-4ed7-badb-ae1dca0a55a7	{"id" : "6c7a4410-4ec0-46f5-9fcd-754f47a9e5cd","tags": [], "permissionName": "login.removeUser", "subPermissions": []}
+eac7dd73-86a4-4f28-8a92-aad97f9641b8	{"id" : "250494e9-275f-4b2c-a0b1-8cf65ea0b5ad","tags": [], "permissionName": "perms", "subPermissions": ["perms.users", "perms.permissions"]}
+4c2552c5-b4ba-4d2d-92ef-482673db6094	{"id" : "83613c13-f412-4bc4-86b6-77e084e39921","tags": [], "permissionName": "perms.permissions.create", "subPermissions": []}
+ef3a5fb2-db74-49e7-92b6-48aae9fc8f5a	{"id" : "5914e7fd-d1d9-455e-b520-f8435a342671","tags": [], "permissionName": "perms.permissions.delete", "subPermissions": []}
+6a3548ea-e8f4-4e15-bcae-14ced0af6e76	{"id" : "4ec6aadd-f5ba-4e32-9c01-d6636261a274","tags": [], "permissionName": "perms.permissions", "subPermissions": ["perms.permissions.read", "perms.permissions.create", "perms.permissions.delete"]}
+f3c7324a-9f7f-4912-a8f9-e87f5eb12c51	{"id" : "afd0c500-8c01-4140-85d5-11e1461df4d8","tags": [], "permissionName": "perms.permissions.read", "subPermissions": []}
+ee91a409-0b49-4646-898d-9176965feddd	{"id" : "44865483-8b87-49b9-b76f-155e9c367ee2","tags": [], "permissionName": "retrieve.read", "subPermissions": []}
+638f2852-0865-4097-829b-128ec31e644a	{"id" : "9b115c7f-5b2b-4a5f-868f-347362e9e544","tags": [], "permissionName": "perms.users.create", "subPermissions": []}
+40bf7a16-22b4-4434-a5bd-a0e1b43f47f7	{"id" : "5df3f0c6-315f-45ce-a690-f17198c797d9","tags": [], "permissionName": "perms.users.delete", "subPermissions": []}
+b62f6a5b-6a0f-4ccf-8429-4ff099e98108	{"id" : "98280690-174f-4251-8138-acea29523e20","tags": [], "permissionName": "perms.users", "subPermissions": ["perms.users.create", "perms.users.read", "perms.users.delete"]}
+90af90d1-d4ef-4d30-8584-2972938f427e	{"id" : "95993363-ee9e-4fad-84db-6c6bba408ef8","tags": [], "permissionName": "perms.users.read", "subPermissions": []}
+ab0b3c86-53ee-4f93-b017-f6e21ca76a5b	{"id" : "295a41ce-f102-4fe8-9da0-82a2e05095e9","tags": [], "permissionName": "thing.create", "subPermissions": []}
+7ca7ebc2-6a93-45f9-9fb0-5a51565a1c15	{"id" : "95426638-01bd-4290-ab42-c96ab96baf88","tags": [], "permissionName": "thing.delete", "subPermissions": []}
+a856ccb7-d283-4a75-9278-d2a1438a4781	{"id" : "b122ad54-3a01-4a03-af7e-14f57fb77b45","tags": [], "permissionName": "thing.edit", "subPermissions": []}
+17b8fb37-ea44-40e9-bfec-6fae074e4248	{"id" : "6302eaf3-394e-498c-93bd-8a7e90171d53","tags": [], "permissionName": "thing.read", "subPermissions": []}
+017cb6eb-20ac-4dc9-94a9-a8449feaed8b	{"id" : "5ef495c4-aaff-4816-b948-e0ac3985e78c","tags": [], "permissionName": "thing.see_sensitive", "subPermissions": []}
+b2bf661d-209c-43a9-8851-a025238065fc	{"id" : "2a23b100-0359-4459-9021-b0052c636bfa","tags": [], "permissionName": "thing.super", "subPermissions": ["thing.read", "thing.create", "thing.edit", "thing.delete", "thing.see_sensitive"]}
 \.
 
 
