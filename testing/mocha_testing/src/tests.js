@@ -10,9 +10,11 @@ var bacon = {
     secret_power : 'so crisp, so delicious'
 }
 
+var OKAPI_TOKEN_HEADER = "X-Okapi-Token";
 //Get a JWT with the jill user
 //
-describe('Tests with Jill', () => {
+describe('Tests with Jill', function() {
+    this.timeout(50000);
     var jill_token = null;
     it('should get a valid token for Jill', () => {
         var token_request = {
@@ -30,7 +32,7 @@ describe('Tests with Jill', () => {
             }
         ).then( response => {
             if(response.ok) {
-                jill_token = response.headers.get('Authorization');
+                jill_token = response.headers.get(OKAPI_TOKEN_HEADER);
                 expect(jill_token).to.be.a('string');
                 console.log('Jill token is: ' + jill_token);
             } else {
@@ -47,7 +49,7 @@ describe('Tests with Jill', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', jill_token);
+        headers.append(OKAPI_TOKEN_HEADER, jill_token);
         return fetch(okapi_url + '/things',
             {
                 method : 'POST', headers : headers,
@@ -69,7 +71,7 @@ describe('Tests with Jill', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', jill_token);
+        headers.append(OKAPI_TOKEN_HEADER, jill_token);
         return fetch(okapi_url + '/things/bacon',
             {
                 method : 'DELETE', headers : headers,
@@ -92,7 +94,8 @@ describe('Tests with Jill', () => {
 //Remove the thing.super permission from shane
 //Attempt to add the sausage item (expect failure)
 //
-describe('Tests with Shane', () => {
+describe('Tests with Shane', function() {
+    this.timeout(50000);
     var ham = {
         name : 'ham',
         purpose : 'fooooood',
@@ -117,7 +120,7 @@ describe('Tests with Shane', () => {
             }
         ).then( response => {
             if(response.ok) {
-                shane_token = response.headers.get('Authorization');
+                shane_token = response.headers.get(OKAPI_TOKEN_HEADER);
                 expect(shane_token).to.be.a('string');
                 var payload_string = get_payload(shane_token);
                 var payload = JSON.parse(payload_string);
@@ -137,7 +140,7 @@ describe('Tests with Shane', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         console.log("Making fetch call to add ham");
         return fetch(okapi_url + '/things',
             {
@@ -154,7 +157,7 @@ describe('Tests with Shane', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         var new_perm = { permission_name : 'thing.super' };
         return fetch(okapi_url + '/perms/users/shane/permissions',
             {
@@ -170,7 +173,7 @@ describe('Tests with Shane', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         return fetch(okapi_url + '/things',
             {
                 method : 'POST', headers : headers,
@@ -193,7 +196,7 @@ describe('Tests with Shane', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         return fetch(okapi_url + '/things/ham',
             {
                 method : 'DELETE', headers : headers,
@@ -211,7 +214,7 @@ describe('Tests with Shane', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         return fetch(okapi_url + '/perms/users/shane/permissions/thing.super',
             {
                 method : 'DELETE', headers : headers,
@@ -255,7 +258,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
             }
         ).then( response => {
             if(response.ok) {
-                shane_token = response.headers.get('Authorization');
+                shane_token = response.headers.get(OKAPI_TOKEN_HEADER);
                 expect(shane_token).to.be.a('string');
                 var payload_string = get_payload(shane_token);
                 var payload = JSON.parse(payload_string);
@@ -278,7 +281,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         return fetch(okapi_url + '/perms/permissions',
             {
                 method : 'POST', headers : headers,
@@ -305,7 +308,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
             }
         ).then( response => {
             if(response.ok) {
-                joe_token = response.headers.get('Authorization');
+                joe_token = response.headers.get(OKAPI_TOKEN_HEADER);
                 expect(joe_token).to.be.a('string');
                 var payload_string = get_payload(joe_token);
                 var payload = JSON.parse(payload_string);
@@ -338,8 +341,8 @@ describe('should perform tests with adding and removing permissions from Joe', (
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
-        var new_perm = { permission_name : 'read.all' };
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
+        var new_perm = { permissionName : 'read.all' };
         return fetch(okapi_url + '/perms/users/joe/permissions',
             {
                 method : 'POST', headers : headers,
@@ -354,7 +357,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', joe_token);
+        headers.append(OKAPI_TOKEN_HEADER, joe_token);
         return fetch(okapi_url + '/things',
             {
                 method : 'GET', headers : headers,
@@ -369,7 +372,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         return fetch(okapi_url + '/perms/users/joe/permissions/read.all',
             {
                 method : 'DELETE', headers : headers,
@@ -382,7 +385,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', shane_token);
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
         return fetch(okapi_url + '/perms/permissions/read.all',
             {
                 method : 'DELETE', headers : headers
