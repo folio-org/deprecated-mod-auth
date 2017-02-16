@@ -158,7 +158,7 @@ describe('Tests with Shane', function() {
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
         headers.append(OKAPI_TOKEN_HEADER, shane_token);
-        var new_perm = { permission_name : 'thing.super' };
+        var new_perm = { permissionName : 'thing.super' };
         return fetch(okapi_url + '/perms/users/shane/permissions',
             {
                 method : 'POST', headers : headers,
@@ -239,7 +239,8 @@ describe('Tests with Shane', function() {
 //Remove read.all permission from Joe
 //Delete thing.all permission
 //
-describe('should perform tests with adding and removing permissions from Joe', () => {
+describe('should perform tests with adding and removing permissions from Joe', function() {
+    this.timeout(50000);
     var shane_token = null;
     var joe_token = null;
     it('should get a valid token for Shane', () => {
@@ -274,8 +275,8 @@ describe('should perform tests with adding and removing permissions from Joe', (
         });
     });
     var read_all_perm = {
-        permission_name : "read.all",
-        sub_permissions : [ "thing.read", "retrieve.read" ]
+        permissionName : "read.all",
+        subPermissions : [ "thing.read", "retrieve.read" ]
     };
     it('should create a new read.all permission', () => {
         var headers = new fetch.Headers();
@@ -327,7 +328,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
-        headers.append('Authorization', joe_token);
+        headers.append(OKAPI_TOKEN_HEADER, joe_token);
         return fetch(okapi_url + '/things',
             {
                 method : 'GET', headers : headers,
@@ -363,7 +364,15 @@ describe('should perform tests with adding and removing permissions from Joe', (
                 method : 'GET', headers : headers,
             }
         ).then(response => {
-            expect(response.ok).to.equal(true); 
+            if(response.ok) {
+            	expect(response.ok).to.equal(true);
+	    } else {
+            	response.text().then( text => {
+		   console.log("Got status " + response.status);
+                   console.log("Got message " + text);
+                   throw new Error("Bad response: " + text);
+		});
+            } 
         });
     });
 
@@ -391,7 +400,7 @@ describe('should perform tests with adding and removing permissions from Joe', (
                 method : 'DELETE', headers : headers
             }
         ).then(response => {
-            expect(response.ok).to.equal(true);
+            expect(response.status).to.equal(204);
         });
     });
 

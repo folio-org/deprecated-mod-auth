@@ -49,7 +49,7 @@ function retrieve_thing(req, res) {
     }
     //need to make a request to the other module
     headers = new fetch.Headers();
-    headers.append('Authorization', 'Bearer ' + token);
+    headers.append('X-Okapi-Token', + token);
     headers.append('X-Okapi-Tenant', get_okapi_tenant(req));
     fetch(thing_url,
         { method : 'GET' , headers : headers}).then((fetch_res) => {
