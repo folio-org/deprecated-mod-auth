@@ -243,6 +243,7 @@ describe('should perform tests with adding and removing permissions from Joe', f
     this.timeout(50000);
     var shane_token = null;
     var joe_token = null;
+    var read_all_perm_id = null;
     it('should get a valid token for Shane', () => {
         var token_request = {
             username : 'shane',
@@ -290,6 +291,9 @@ describe('should perform tests with adding and removing permissions from Joe', f
             }
         ).then(response => {
             expect(response.ok).to.equal(true);
+            return response.json().then(json => {
+ 	    read_all_perm_id = json.id;
+	    });
         });
     });
 
@@ -382,7 +386,7 @@ describe('should perform tests with adding and removing permissions from Joe', f
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
         headers.append(OKAPI_TOKEN_HEADER, shane_token);
-        return fetch(okapi_url + '/perms/users/joe/permissions/read.all',
+        return fetch(okapi_url + '/perms/users/joe/permissions/read.all' ,
             {
                 method : 'DELETE', headers : headers,
             }
@@ -395,7 +399,7 @@ describe('should perform tests with adding and removing permissions from Joe', f
         headers.append('X-Okapi-Tenant', 'diku');
         headers.append('Content-Type', 'application/json');
         headers.append(OKAPI_TOKEN_HEADER, shane_token);
-        return fetch(okapi_url + '/perms/permissions/read.all',
+        return fetch(okapi_url + '/perms/permissions/' + read_all_perm_id,
             {
                 method : 'DELETE', headers : headers
             }
