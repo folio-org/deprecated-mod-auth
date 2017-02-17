@@ -8,7 +8,7 @@ var bacon = {
     name : 'bacon',
     purpose : 'pleasure and nourishment',
     secret_power : 'so crisp, so delicious'
-}
+};
 
 var OKAPI_TOKEN_HEADER = "X-Okapi-Token";
 //Get a JWT with the jill user
@@ -407,6 +407,159 @@ describe('should perform tests with adding and removing permissions from Joe', f
             expect(response.status).to.equal(204);
         });
     });
+
+});
+
+describe('should create a new user "bubba" entirely from scratch, test login and then remove', function() {
+	this.timeout(50000);
+	var shane_token = null;
+	var bubba_token = null;
+	it('should get a valid token for Shane', () => {
+        var token_request = {
+            username : 'shane',
+            password : 'LittleNiceSheep'
+        };
+
+        var headers = new fetch.Headers();
+        headers.append('X-Okapi-Tenant', 'diku');
+        headers.append('Content-Type', 'application/json');
+        return fetch(okapi_url + '/authn/login',
+            {
+                method : 'POST', headers : headers,
+                body : JSON.stringify(token_request)
+            }
+        ).then( response => {
+            if(response.ok) {
+                shane_token = response.headers.get(OKAPI_TOKEN_HEADER);
+                expect(shane_token).to.be.a('string');
+                var payload_string = get_payload(shane_token);
+                var payload = JSON.parse(payload_string);
+                expect(payload.sub).to.equal('shane');
+                //console.log('Shane token is: ' + payload_string);
+            } else {
+                response.text().then(text => {
+                    console.log("Got status " + response.status);
+                    console.log("Got message " + text);
+                    throw new Error("Bad response: " + text);
+                });
+            }
+        });
+    });
+	var bubba_user = {
+		"username" : "bubba",
+		"id" : "0005",
+		"active" : true
+	};
+	it('should be able to create a new mod-users entry', () => {
+        var headers = new fetch.Headers();
+        headers.append('X-Okapi-Tenant', 'diku');
+        headers.append('Content-Type', 'application/json');
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
+        return fetch(okapi_url + '/users',
+            {
+                method : 'POST', headers : headers,
+                body : JSON.stringify(bubba_user)
+            }
+        ).then(response => {
+            if(response.status == 201) {
+                //Do nothing, we're good
+            } else {
+                return response.text().then(text=>{
+                    console.log("Status: " + response.status +
+                        " : " + text);
+                    throw new Error(text);
+                });
+            }
+        });
+    });
+	var bubba_credentials = {
+		"username" : "bubba",
+		"password" : "TwoStupidDogs"
+	}
+	it('should create new login credentials for Bubba', () => {
+        var headers = new fetch.Headers();
+        headers.append('X-Okapi-Tenant', 'diku');
+        headers.append('Content-Type', 'application/json');
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
+        return fetch(okapi_url + '/authn/credentials',
+            {
+                method : 'POST', headers : headers,
+                body : JSON.stringify(bubba_credentials)
+            }
+        ).then(response => {
+            if(response.status == 201) {
+                //Do nothing, we're good
+            } else {
+                return response.text().then(text=>{
+                    console.log("Status: " + response.status +
+                        " : " + text);
+                    throw new Error(text);
+                });
+            }
+        });
+ 
+	});
+	it('should get a valid token for Bubba', () => {
+        var headers = new fetch.Headers();
+        headers.append('X-Okapi-Tenant', 'diku');
+        headers.append('Content-Type', 'application/json');
+        return fetch(okapi_url + '/authn/login',
+            {
+                method : 'POST', headers : headers,
+                body : JSON.stringify(bubba_credentials)
+            }
+        ).then( response => {
+            if(response.ok) {
+                bubba_token = response.headers.get(OKAPI_TOKEN_HEADER);
+                expect(bubba_token).to.be.a('string');
+                var payload_string = get_payload(bubba_token);
+                var payload = JSON.parse(payload_string);
+                expect(payload.sub).to.equal('bubba');
+                //console.log('Shane token is: ' + payload_string);
+            } else {
+                response.text().then(text => {
+                    console.log("Got status " + response.status);
+                    console.log("Got message " + text);
+                    throw new Error("Bad response: " + text);
+                });
+            }
+        });
+    });
+	it('should delete the new credentials entry', () => {
+        var headers = new fetch.Headers();
+        headers.append('X-Okapi-Tenant', 'diku');
+        headers.append('Content-Type', 'application/json');
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
+        return fetch(okapi_url + '/authn/credentials/bubba',
+            {
+                method : 'DELETE', headers : headers,
+            }
+        ).then(response => {
+            if(response.status == 204) {
+                //Do nothing, we're good
+            } else {
+                throw new Error("Bad response: " + response.status);
+            }
+        });
+    });
+	it('should delete the new mod-users entry', () => {
+        var headers = new fetch.Headers();
+        headers.append('X-Okapi-Tenant', 'diku');
+        headers.append('Content-Type', 'application/json');
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
+        return fetch(okapi_url + '/users/0005',
+            {
+                method : 'DELETE', headers : headers,
+            }
+        ).then(response => {
+            if(response.status == 204) {
+                //Do nothing, we're good
+            } else {
+                throw new Error("Bad response: " + response.status);
+            }
+        });
+    });
+
 
 });
 
