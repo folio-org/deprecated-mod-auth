@@ -1,1 +1,7 @@
-{ "username" : "shane", "permissions" : [ "perms", "login" ] }
+{
+  "username": "shane",
+  "permissions": [
+    "perms",
+    "login"
+  ]
+}

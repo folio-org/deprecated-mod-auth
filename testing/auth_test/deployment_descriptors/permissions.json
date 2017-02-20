@@ -1,7 +1,7 @@
 {
-    "srvcId" : "permissions-module",
-    "nodeId" : "localhost",
-    "descriptor" : {
-        "exec" : "java -jar ../../permissions_module/target/permissions-module-fat.jar -Dhttp.port=%p db_connection=/home/vagrant/mod-auth/testing/postgres/pg_options.json"
-    }
+  "srvcId": "permissions-module",
+  "nodeId": "localhost",
+  "descriptor": {
+    "exec": "java -jar ../../permissions_module/target/permissions-module-fat.jar -Dhttp.port=%p db_connection=/home/vagrant/mod-auth/testing/postgres/pg_options.json"
+  }
 }

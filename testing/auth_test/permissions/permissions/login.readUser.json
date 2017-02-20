@@ -1,1 +1,5 @@
-{"tags": [], "permission_name": "login.readUser", "sub_permissions": []}
+{
+  "tags": [],
+  "permission_name": "login.readUser",
+  "sub_permissions": []
+}

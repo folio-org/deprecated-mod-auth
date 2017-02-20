@@ -1,1 +1,4 @@
-{ "username" : "joe", "permissions" : [ ] }
+{
+  "username": "joe",
+  "permissions": []
+}

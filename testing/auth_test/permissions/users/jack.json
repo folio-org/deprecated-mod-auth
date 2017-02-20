@@ -1,1 +1,6 @@
-{ "username" : "jack", "permissions" : [ "thing.read" ] }
+{
+  "username": "jack",
+  "permissions": [
+    "thing.read"
+  ]
+}
