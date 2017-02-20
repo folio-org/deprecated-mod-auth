@@ -37,7 +37,7 @@
             "type" : "request-response"
         },
         {
-	        "methods" : [ "PUT" ],
+            "methods" : [ "PUT" ],
             "path" : "/admin",
             "level" : "30",
             "type" : "request-response"

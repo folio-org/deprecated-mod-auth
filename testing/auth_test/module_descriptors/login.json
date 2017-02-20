@@ -6,10 +6,10 @@
             "id" : "login",
             "version" : "0.0.1"
         },
-	{
-	    "id" : "_tenant",
+        {
+            "id" : "_tenant",
             "version" : "0.0.1"
-    	}
+        }
     ],
     "routingEntries" : [
         {
@@ -18,7 +18,7 @@
             "level" : "30",
             "type" : "request-response"
         },
-	 {
+        {
             "methods" : [ "GET" ],
             "path" : "/authn/credentials",
             "level" : "30",

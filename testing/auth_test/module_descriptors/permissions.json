@@ -6,9 +6,9 @@
             "id" : "permissions",
             "version" : "0.0.1"
         },
-	{
-	   "id" : "_tenant",
-	   "version" : "0.0.1"
+        {
+           "id" : "_tenant",
+           "version" : "0.0.1"
         }
     ],
     "routingEntries" : [
