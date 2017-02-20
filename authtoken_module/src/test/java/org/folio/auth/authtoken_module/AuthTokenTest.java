@@ -43,7 +43,6 @@ public class AuthTokenTest {
     vertx = Vertx.vertx();
     JsonObject conf = new JsonObject()
       .put("port", port);
-
     DeploymentOptions opt = new DeploymentOptions()
       .setConfig(conf);
     vertx.deployVerticle(MainVerticle.class.getName(),
@@ -59,16 +58,25 @@ public class AuthTokenTest {
     vertx.close(x -> {
       async.complete();
     });
-
   }
 
   public AuthTokenTest() {
   }
 
+  /**
+   * Test simple permission handling. Since this test will run without Okapi or
+   * mod_permissions, we need to be a little clever in the way we set up the
+   * permissions we have. The whole test is based on the token authtoken creates
+   * before login, that certifies that we have a tenant, but no logged-in user,
+   * and no user-specific permissions. We can add permissions to this (empty)
+   * set via the mechanisms of modulePermissions and ExtraPermissions.
+   *
+   * @param context
+   */
   @Test
   public void test1(TestContext context) {
     async = context.async();
-    logger.debug("test1 starting");
+    logger.debug("AuthToken test1 starting");
 
     RestAssuredClient c;
     Response r;
@@ -83,7 +91,8 @@ public class AuthTokenTest {
     // A request without X-Okapi-Url header.
     // Should return 400, returns 500 because the module crashes
     // in ModulePermissionsSource.setOkapiUrl(ModulePermissionsSource.java:39)
-    given()
+    // See Folio-476
+     given()
       .header("X-Okapi-Tenant", tenant)
       .get("/foo")
       .then()
@@ -93,7 +102,7 @@ public class AuthTokenTest {
     // Even without any credentials in the request, we get back the whole lot,
     // most notbaly a token that certifies the fact that we have a tenant, but
     // have not yet identified ourself.
-    given()
+    r = given()
       .header("X-Okapi-Tenant", tenant)
       .header("X-Okapi-Url", "http://localhost:9130")
       .get("/foo")
@@ -102,16 +111,79 @@ public class AuthTokenTest {
       .header("X-Okapi-Permissions", "[]")
       .header("X-Okapi-Module-Tokens", startsWith("{\"_\":\""))
       .header("X-Okapi-Token", not(isEmptyString()))
-      .header("Authorization", startsWith("Bearer "));
+      .header("Authorization", startsWith("Bearer "))
+      .extract().response();
+    final String noLoginToken = r.getHeader("X-Okapi-Token");
 
+    // A request using the new nologin token with permissionRequired that will fail
+    given()
+      .header("X-Okapi-Tenant", tenant)
+      .header("X-Okapi-Token", noLoginToken)
+      .header("X-Okapi-Url", "http://localhost:9130")
+      .header("X-Okapi-Permissions-Required", "[\"foo.req\"]")
+      .get("/foo")
+      .then()
+      .statusCode(403); // we don't have 'foo.req'
 
-    String nodeListDoc = "[ {" + LS
-      + "  \"nodeId\" : \"localhost\"," + LS
-      + "  \"url\" : \"http://localhost:9129\"" + LS
-      + "} ]";
+    // A request using the new nologin token with permissionDesired that will
+    // succeed, but not give that perm
+    given()
+      .header("X-Okapi-Tenant", tenant)
+      .header("X-Okapi-Token", noLoginToken)
+      .header("X-Okapi-Url", "http://localhost:9130")
+      .header("X-Okapi-Permissions-Desired", "[\"foo.des\"]")
+      .get("/foo")
+      .then()
+      .statusCode(202) // we don't have 'foo.req'
+      .header("X-Okapi-Permissions", "[]")
+      .header("X-Okapi-Module-Tokens", startsWith("{\"_\":\""))
+      .header("X-Okapi-Token", not(isEmptyString()));
+
+    // A request with the nologin token, with some modulePermissions to be
+    // included in a new token
+    r = given()
+      .header("X-Okapi-Tenant", tenant)
+      .header("X-Okapi-Token", noLoginToken)
+      .header("X-Okapi-Url", "http://localhost:9130")
+      .header("X-Okapi-Module-Permissions",
+        "{ \"bar\": [\"bar.first\",\"bar.second\"] }")
+      .get("/foo")
+      .then()
+      .statusCode(202)
+      .header("X-Okapi-Permissions", "[]")
+      .header("X-Okapi-Module-Tokens", not(isEmptyString()))
+      .extract().response();
+    final String modTokens = r.getHeader("X-Okapi-Module-Tokens");
+    JsonObject modtoks = new JsonObject(modTokens);
+    String barToken = modtoks.getString("bar");
+
+    // Make a request to bar, with the modulePermissions
+    given()
+      .header("X-Okapi-Tenant", tenant)
+      .header("X-Okapi-Token", barToken)
+      .header("X-Okapi-Url", "http://localhost:9130")
+      .header("X-Okapi-Permissions-Desired", "bar.first")
+      .header("X-Okapi-Permissions-Required", "bar.second")
+      .get("/bar")
+      .then()
+      .statusCode(202)
+      .header("X-Okapi-Permissions", "[\"bar.first\",\"bar.second\"]");
+
+    // - A request with extraPermissions, needing one of them
+    given()
+      .header("X-Okapi-Tenant", tenant)
+      .header("X-Okapi-Token", barToken)
+      .header("X-Okapi-Url", "http://localhost:9130")
+      .header("X-Okapi-Permissions-Desired", "extra.first")
+      .header("X-Okapi-Permissions-Required", "extra.second")
+      .header("X-Okapi-Extra-Permissions", "extra.first,extra.second")
+      .get("/bar")
+      .then()
+      .statusCode(202)
+      .header("X-Okapi-Permissions", "[\"extra.first\",\"extra.second\"]");
 
     async.complete();
-    logger.debug("test1 done");
+    logger.debug("AuthToken test1 done");
 
   }
 
