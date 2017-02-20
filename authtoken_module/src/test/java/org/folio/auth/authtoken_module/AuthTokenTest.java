@@ -1,8 +1,3 @@
-/*
- * Copyright (c) 2015-2017, Index Data
- * All rights reserved.
- * See the file LICENSE for details.
- */
 package org.folio.auth.authtoken_module;
 
 import io.vertx.core.DeploymentOptions;
@@ -61,7 +56,6 @@ public class AuthTokenTest {
   public void tearDown(TestContext context) {
     logger.info("Cleaning up after AuthTokenTest");
     async = context.async();
-    //td(context);
     vertx.close(x -> {
       async.complete();
     });
