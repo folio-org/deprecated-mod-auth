@@ -1,15 +1,15 @@
 {
-    "title" : "Permissions Definition Schema",
-    "type" : "object",
-    "properties" : {
-        "permission_name" : {
-            "type" : "string"
-        },
-        "tenant" : {
-            "type" : "string"
-        },
-        "sub_permissions" : {
-            "type" : "array"
-        }
+  "title": "Permissions Definition Schema",
+  "type": "object",
+  "properties": {
+    "permission_name": {
+      "type": "string"
+    },
+    "tenant": {
+      "type": "string"
+    },
+    "sub_permissions": {
+      "type": "array"
     }
+  }
 }

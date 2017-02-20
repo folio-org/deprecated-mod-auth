@@ -1,20 +1,27 @@
 {
-    "id" : "retrieve-module",
-    "name" : "retrieve",
-    "provides" : [
-        {
-            "id" : "retrieve",
-            "version" : "0.0.1"
-        }
-    ],
-    "routingEntries" : [
-        {
-            "methods" : [ "GET" ],
-            "path" : "/retrieve",
-            "level" : "30",
-            "type" : "request-response",
-            "permissionsRequired" : [ "retrieve.read" ]
-        }
-    ],
-    "modulePermissions" : [ "thing.read", "thing.see_sensitive" ]
+  "id": "retrieve-module",
+  "name": "retrieve",
+  "provides": [
+    {
+      "id": "retrieve",
+      "version": "0.0.1"
+    }
+  ],
+  "routingEntries": [
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/retrieve",
+      "level": "30",
+      "type": "request-response",
+      "permissionsRequired": [
+        "retrieve.read"
+      ]
+    }
+  ],
+  "modulePermissions": [
+    "thing.read",
+    "thing.see_sensitive"
+  ]
 }

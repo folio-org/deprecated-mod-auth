@@ -1,6 +1,5 @@
 {
-    "username" : "joe",
-    "id" : "0003",
-    "active" : true
+  "username": "joe",
+  "id": "0003",
+  "active": true
 }
-
