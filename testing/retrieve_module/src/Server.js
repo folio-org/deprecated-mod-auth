@@ -60,7 +60,7 @@ function retrieve_thing(req, res) {
         }
         return fetch_res.json().then((json) => {
             res.json(json);
-        });    
+        });
     });
 }
 

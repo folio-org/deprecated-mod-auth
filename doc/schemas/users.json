@@ -5,7 +5,7 @@
         "username" : {
             "type" : "string"
         },
-        "tenant" : { 
+        "tenant" : {
             "type" : "string"
         },
         "permissions" : {

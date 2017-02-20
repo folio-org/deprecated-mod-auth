@@ -44,7 +44,7 @@ describe('Tests with Jill', function() {
             }
         });
     });
-    
+
     it('should be able to create a new Thing entry', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
@@ -135,7 +135,7 @@ describe('Tests with Shane', function() {
             }
         });
     });
-    
+
     it('should fail to create a new Thing entry', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
@@ -149,7 +149,7 @@ describe('Tests with Shane', function() {
             }
         ).then(response => {
             console.log("response.ok is " + response.ok);
-            expect(response.ok).to.equal(false); 
+            expect(response.ok).to.equal(false);
         });
     });
 
@@ -338,7 +338,7 @@ describe('should perform tests with adding and removing permissions from Joe', f
                 method : 'GET', headers : headers,
             }
         ).then(response => {
-            expect(response.ok).to.equal(false); 
+            expect(response.ok).to.equal(false);
         });
     });
 
@@ -376,7 +376,7 @@ describe('should perform tests with adding and removing permissions from Joe', f
                    console.log("Got message " + text);
                    throw new Error("Bad response: " + text);
 		});
-            } 
+            }
         });
     });
 
@@ -497,7 +497,7 @@ describe('should create a new user "bubba" entirely from scratch, test login and
                 });
             }
         });
- 
+
 	});
 	it('should get a valid token for Bubba', () => {
         var headers = new fetch.Headers();

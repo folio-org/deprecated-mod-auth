@@ -84,13 +84,13 @@ ln -s ~/mod-users/target mod-users
 
 ## Initialize our Postgres data (and clear out any existing cruft)
 ```
-sudo -u postgres bash -c "psql -c \"DROP DATABASE auth;\""  
-sudo -u postgres bash -c "psql -c \"DROP ROLE diku_login_module;\"" 
-sudo -u postgres bash -c "psql -c \"DROP ROLE diku_permissions_module;\""     
+sudo -u postgres bash -c "psql -c \"DROP DATABASE auth;\""
+sudo -u postgres bash -c "psql -c \"DROP ROLE diku_login_module;\""
+sudo -u postgres bash -c "psql -c \"DROP ROLE diku_permissions_module;\""
 sudo -u postgres bash -c "psql -c \"DROP ROLE dbuser;\""
 sudo -u postgres bash -c "psql -c \"CREATE USER dbuser WITH SUPERUSER PASSWORD 'qwerty';\""
-sudo -u postgres bash -c "psql -c \"CREATE ROLE diku_login_module PASSWORD 'diku' NOSUPERUSER NOCREATEDB INHERIT LOGIN;\""  
-sudo -u postgres bash -c "psql -c \"CREATE ROLE diku_permissions_module PASSWORD 'diku' NOSUPERUSER NOCREATEDB INHERIT LOGIN;\""  
+sudo -u postgres bash -c "psql -c \"CREATE ROLE diku_login_module PASSWORD 'diku' NOSUPERUSER NOCREATEDB INHERIT LOGIN;\""
+sudo -u postgres bash -c "psql -c \"CREATE ROLE diku_permissions_module PASSWORD 'diku' NOSUPERUSER NOCREATEDB INHERIT LOGIN;\""
 sudo -u postgres bash -c "psql -c \"CREATE DATABASE auth WITH OWNER=dbuser ENCODING 'UTF8' LC_CTYPE 'en_US.UTF-8' LC_COLLATE 'en_US.UTF-8' TEMPLATE 'template0';\""
 sudo -u postgres bash -c "psql auth < /home/vagrant/mod-auth/testing/postgres/auth.sql"
 ```
