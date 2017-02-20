@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.auth.authtoken_module.impl;
 
 import org.folio.auth.authtoken_module.PermissionsSource;
@@ -34,7 +29,7 @@ public class DummyPermissionsSource implements PermissionsSource {
 
   @Override
   public void setAuthApiKey(String key) {
-    return; 
+    return;
   }
 
   @Override
@@ -42,5 +37,5 @@ public class DummyPermissionsSource implements PermissionsSource {
     return;
   }
 
-  
+
 }

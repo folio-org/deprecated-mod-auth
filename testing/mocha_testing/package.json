@@ -1,14 +1,14 @@
 {
-    "name" : "auth_mocha_test",
-    "version" : "0.0.1",
-    "scripts" : {
-        "start" : "mocha src/tests.js"
-    },
-    "dependencies" : {
-        "mocha" : "latest",
-        "body-parser" : "latest",
-        "minimist" : "latest",
-        "node-fetch" : "latest",
-        "chai" : "latest"
-    }
+  "name": "auth_mocha_test",
+  "version": "0.0.1",
+  "scripts": {
+    "start": "mocha src/tests.js"
+  },
+  "dependencies": {
+    "mocha": "latest",
+    "body-parser": "latest",
+    "minimist": "latest",
+    "node-fetch": "latest",
+    "chai": "latest"
+  }
 }

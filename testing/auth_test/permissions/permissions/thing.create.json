@@ -1,1 +1,5 @@
-{"tags": [], "permission_name": "thing.create", "sub_permissions": []}
+{
+  "tags": [],
+  "permission_name": "thing.create",
+  "sub_permissions": []
+}

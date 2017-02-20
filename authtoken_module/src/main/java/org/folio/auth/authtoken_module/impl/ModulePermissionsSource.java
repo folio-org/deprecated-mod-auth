@@ -1,8 +1,3 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package org.folio.auth.authtoken_module.impl;
 
 import org.folio.auth.authtoken_module.PermissionsSource;
@@ -28,31 +23,31 @@ public class ModulePermissionsSource implements PermissionsSource {
   private String authApiKey = "";
   private String tenant;
   private final Logger logger = LoggerFactory.getLogger("mod-auth-authtoken-module");
-  
+
   public ModulePermissionsSource(Vertx vertx) {
     //permissionsModuleUrl = url;
     this.vertx = vertx;
   }
-  
+
   public void setOkapiUrl(String url) {
     okapiUrl = url;
     if(!okapiUrl.endsWith("/")) {
       okapiUrl = okapiUrl + "/";
     }
   }
-  
+
   public void setRequestToken(String token) {
     requestToken = token;
   }
-  
+
   public void setAuthApiKey(String key) {
     authApiKey = key;
   }
-  
+
   public void setTenant(String tenant) {
     this.tenant = tenant;
   }
-  
+
   @Override
   public Future<JsonArray> getPermissionsForUser(String username) {
     Future<JsonArray> future = Future.future();
@@ -95,5 +90,5 @@ public class ModulePermissionsSource implements PermissionsSource {
     return future;
   }
 
-  
+
 }

@@ -1,7 +1,7 @@
 {
-    "srvcId" : "thing-module",
-    "nodeId" : "localhost",
-    "descriptor" : {
-        "exec" : "node ../thing_module/src/Server.js -p %p"
-    }
+  "srvcId": "thing-module",
+  "nodeId": "localhost",
+  "descriptor": {
+    "exec": "node ../thing_module/src/Server.js -p %p"
+  }
 }
