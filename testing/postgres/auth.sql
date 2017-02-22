@@ -138,8 +138,9 @@ ef3a5fb2-db74-49e7-92b6-48aae9fc8f5a	{"id" : "5914e7fd-d1d9-455e-b520-f8435a3426
 f3c7324a-9f7f-4912-a8f9-e87f5eb12c51	{"id" : "afd0c500-8c01-4140-85d5-11e1461df4d8","tags": [], "permissionName": "perms.permissions.read", "subPermissions": []}
 ee91a409-0b49-4646-898d-9176965feddd	{"id" : "44865483-8b87-49b9-b76f-155e9c367ee2","tags": [], "permissionName": "retrieve.read", "subPermissions": []}
 638f2852-0865-4097-829b-128ec31e644a	{"id" : "9b115c7f-5b2b-4a5f-868f-347362e9e544","tags": [], "permissionName": "perms.users.create", "subPermissions": []}
+0e899da0-de84-4784-bfb6-37660e155231	{"id" : "dd61cfc2-8a9c-420c-ba74-5400398efa4a","tags": [], "permissionName": "perms.users.modify", "subPermissions": []}
 40bf7a16-22b4-4434-a5bd-a0e1b43f47f7	{"id" : "5df3f0c6-315f-45ce-a690-f17198c797d9","tags": [], "permissionName": "perms.users.delete", "subPermissions": []}
-b62f6a5b-6a0f-4ccf-8429-4ff099e98108	{"id" : "98280690-174f-4251-8138-acea29523e20","tags": [], "permissionName": "perms.users", "subPermissions": ["perms.users.create", "perms.users.read", "perms.users.delete"]}
+b62f6a5b-6a0f-4ccf-8429-4ff099e98108	{"id" : "98280690-174f-4251-8138-acea29523e20","tags": [], "permissionName": "perms.users", "subPermissions": ["perms.users.create", "perms.users.modify", "perms.users.read", "perms.users.delete"]}
 90af90d1-d4ef-4d30-8584-2972938f427e	{"id" : "95993363-ee9e-4fad-84db-6c6bba408ef8","tags": [], "permissionName": "perms.users.read", "subPermissions": []}
 ab0b3c86-53ee-4f93-b017-f6e21ca76a5b	{"id" : "295a41ce-f102-4fe8-9da0-82a2e05095e9","tags": [], "permissionName": "thing.create", "subPermissions": []}
 7ca7ebc2-6a93-45f9-9fb0-5a51565a1c15	{"id" : "95426638-01bd-4290-ab42-c96ab96baf88","tags": [], "permissionName": "thing.delete", "subPermissions": []}

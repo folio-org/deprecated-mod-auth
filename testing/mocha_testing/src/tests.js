@@ -499,6 +499,73 @@ describe('should create a new user "bubba" entirely from scratch, test login and
         });
 
 	});
+	var bubba_permission_user = {
+		"username" : "bubba",
+		"permissions" : []
+	};
+
+    it('should create a new permissions user for Bubba', () => {
+		var headers = new fetch.Headers();
+		headers.append('X-Okapi-Tenant', 'diku');
+		headers.append('Content-Type', 'application/json');
+		headers.append(OKAPI_TOKEN_HEADER, shane_token);
+		return fetch(okapi_url + '/perms/users',
+			{
+				method : 'POST', headers : headers,
+				body : JSON.stringify(bubba_permission_user)
+			}
+		).then(response => {
+			if(response.status == 201) {
+			} else {
+				return response.text().then(text => {
+					console.log("Status: " + response.status + " : " + text);
+					throw new Error(text);
+				});
+			}
+		});		
+	});
+
+	var modified_bubba_permission_user = {
+		"username" : "bubba",
+		"permissions" : [ "thing.read" ]
+	};
+	it('should PUT a change to the permissions user for Bubba', () => {
+		var headers = new fetch.Headers();
+		headers.append('X-Okapi-Tenant', 'diku');
+		headers.append('Content-Type', 'application/json');
+		headers.append(OKAPI_TOKEN_HEADER, shane_token);
+		return fetch(okapi_url + '/perms/users/bubba',
+			{
+				method : 'PUT', headers : headers,
+				body : JSON.stringify(modified_bubba_permission_user)
+			}
+		).then(response => {
+			//expect(response.status).to.equal(200);
+			if(response.status != 200) {
+				return response.text().then(text => {
+					console.log("Status: " + response.status + " : " + text);
+					throw new Error(text);
+				});
+			}
+		});
+	});
+	it('should confirm that Bubba has the new permissions', () => {
+		var headers = new fetch.Headers();
+		headers.append('X-Okapi-Tenant', 'diku');
+		headers.append('Content-Type', 'application/json');
+		headers.append(OKAPI_TOKEN_HEADER, shane_token);
+		return fetch(okapi_url + '/perms/users/bubba/permissions',
+			{
+				method : 'GET', headers : headers,
+			}
+		).then(response => {
+			expect(response.status).to.equal(200);
+			return response.json().then(json => {
+				expect(json.permissionNames).to.contain("thing.read");
+			});
+		});
+	});
+
 	it('should get a valid token for Bubba', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
@@ -542,6 +609,24 @@ describe('should create a new user "bubba" entirely from scratch, test login and
             }
         });
     });
+	it('should delete the new permissions user', () => {
+        var headers = new fetch.Headers();
+        headers.append('X-Okapi-Tenant', 'diku');
+        headers.append('Content-Type', 'application/json');
+        headers.append(OKAPI_TOKEN_HEADER, shane_token);
+        return fetch(okapi_url + '/perms/users/bubba',
+            {
+                method : 'DELETE', headers : headers,
+            }
+        ).then(response => {
+            if(response.status == 204) {
+                //Do nothing, we're good
+            } else {
+                throw new Error("Bad response: " + response.status);
+            }
+        });
+
+	});
 	it('should delete the new mod-users entry', () => {
         var headers = new fetch.Headers();
         headers.append('X-Okapi-Tenant', 'diku');
