@@ -30,7 +30,7 @@ that privileged modules (such as Authentication) may make use of.
 This module stores permissions and associations between permissions and users.
 It also maintains a hierarchy of permissions and sub-permissions, allowing for
 permissions to act as roles, rather than simple bits. It is used primarily by
-the Authorization module, though it is possible that some Authentication
+the Authtoken module, though it is possible that some Authentication
 implementations may have reason to make calls to the Permissions module as well.
 
 # Additional information
