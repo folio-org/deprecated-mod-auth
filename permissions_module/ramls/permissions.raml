@@ -120,6 +120,11 @@ traits:
                         body:
                             application/json:
                                 schema: permissionUser
+                    403:
+                        description: "Forbidden"
+                        body:
+                            text/plain:
+                                example: "Access forbidden"     
                     404:
                         description: "User not found"
                         body:
@@ -191,6 +196,11 @@ traits:
                             body:
                                 application/json:
                                     schema: permissionNameListObject
+                        403:
+                            description: "Forbidden"
+                            body:
+                                text/plain:
+                                    example: "Access forbidden"    
                         404:
                             description: "User not found"
                             body:
