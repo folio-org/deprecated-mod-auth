@@ -522,7 +522,7 @@ describe('should create a new user "bubba" entirely from scratch, test login and
 					throw new Error(text);
 				});
 			}
-		});		
+		});
 	});
 
 	var modified_bubba_permission_user = {
