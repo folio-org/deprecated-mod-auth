@@ -32,7 +32,7 @@ sudo n stable
 
 ## Clone the Okapi repo and build it
 ```
-git clone https://github.com/folio-org/okapi.git
+git clone --recursive https://github.com/folio-org/okapi.git
 cd okapi
 mvn clean install
 ```
@@ -40,11 +40,9 @@ mvn clean install
 ## Clone the auth module repo and build the 3 modules
 ```
 cd ~
-git clone https://github.com/folio-org/mod-auth.git
+git clone --recursive https://github.com/folio-org/mod-auth.git
 cd mod-auth
-cd login_module && mvn clean install
-cd ../authtoken_module && mvn clean install
-cd ../permissions_module && mvn clean install
+mvn clean install
 ```
 
 ## Build the nodejs sample modules we will be using
@@ -57,7 +55,7 @@ cd ~/mod-auth/testing/retrieve_module && npm install
 ## Clone and build the raml-module-builder repo
 ```
 cd ~
-git clone https://github.com/folio-org/raml-module-builder.git
+git clone --recursive https://github.com/folio-org/raml-module-builder.git
 cd raml-module-builder
 mvn clean install
 ```
@@ -65,7 +63,7 @@ mvn clean install
 ## Clone and build the mod-users repo
 ```
 cd ~
-git clone https://github.com/folio-org/mod-users.git
+git clone --recursive https://github.com/folio-org/mod-users.git
 cd mod-users
 mvn clean install
 ```
@@ -107,5 +105,4 @@ cd ~/mod-auth/testing/auth_test/
 cd ~/mod-auth/testing/mocha_testing/
 npm install
 npm start
-
 ```
