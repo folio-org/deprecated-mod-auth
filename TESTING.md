@@ -42,9 +42,7 @@ mvn clean install
 cd ~
 git clone --recursive https://github.com/folio-org/mod-auth.git
 cd mod-auth
-cd login_module && mvn clean install
-cd ../authtoken_module && mvn clean install
-cd ../permissions_module && mvn clean install
+mvn clean install
 ```
 
 ## Build the nodejs sample modules we will be using
