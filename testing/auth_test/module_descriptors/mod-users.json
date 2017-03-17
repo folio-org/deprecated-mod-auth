@@ -8,7 +8,7 @@
     },
     {
       "id": "_tenant",
-      "version": "0.0.1"
+      "version": "1.0.0"
     }
   ],
   "routingEntries": [
@@ -18,7 +18,14 @@
       ],
       "path": "/users",
       "level": "30",
-      "type": "request-response"
+      "type": "request-response",
+      "permissionsRequired": [
+        "users.read"
+      ],
+      "permissionsDesired": [
+        "users.read.basic",
+        "users.read.restricted"
+      ]
     },
     {
       "methods": [
@@ -26,7 +33,10 @@
       ],
       "path": "/users",
       "level": "30",
-      "type": "request-response"
+      "type": "request-response",
+      "permissionsRequired": [
+        "users.create"
+      ]
     },
     {
       "methods": [
@@ -34,7 +44,10 @@
       ],
       "path": "/users",
       "level": "30",
-      "type": "request-response"
+      "type": "request-response",
+      "permissionsRequired": [
+        "users.edit"
+      ]
     },
     {
       "methods": [
@@ -42,15 +55,54 @@
       ],
       "path": "/users",
       "level": "30",
-      "type": "request-response"
+      "type": "request-response",
+      "permissionsRequired": [
+        "users.delete"
+      ]
+    },
+    {
+      "methods": [
+        "GET"
+      ],
+      "path": "/groups",
+      "level": "30",
+      "type": "request-response",
+      "permissionsRequired": [
+        "usergroups.read"
+      ]
+    },
+    {
+      "methods": [
+        "POST"
+      ],
+      "path": "/groups",
+      "level": "30",
+      "type": "request-response",
+      "permissionsRequired": [
+        "usergroups.create"
+      ]
     },
     {
       "methods": [
         "PUT"
       ],
-      "path": "/admin",
+      "path": "/groups",
       "level": "30",
-      "type": "request-response"
+      "type": "request-response",
+      "permissionsRequired": [
+        "usergroups.edit"
+      ]
+    },
+    {
+      "methods": [
+        "DELETE"
+      ],
+      "path": "/groups",
+      "level": "30",
+      "type": "request-response",
+      "permissionsRequired": [
+        "usergroups.delete"
+      ]
     }
   ],
   "modulePermissions": []
