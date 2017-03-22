@@ -157,7 +157,7 @@ do
     -H "Content-type: application/json" \
     -H "X-Okapi-Tenant: diku" \
     -d @$f \
-    http://localhost:9130/users
+    http://localhost:9131/users
 done
 
 #echo "Populating the permissions module"
