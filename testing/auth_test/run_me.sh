@@ -143,12 +143,6 @@ curl -w '\n' -X POST -D - \
     -d @./tenant_associations/retrieve.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
-echo "Activating debug logging in the mod-users module"
-curl -w '\n' -X PUT -D - \
-    -H "Content-type: application/json" \
-    -H "X-Okapi-Tenant: diku" \
-    http://localhost:9130/admin/loglevel?level=FINE
-
 echo "Adding the users to mod-users"
 for f in ./users/*
 do
@@ -157,7 +151,7 @@ do
     -H "Content-type: application/json" \
     -H "X-Okapi-Tenant: diku" \
     -d @$f \
-    http://localhost:9130/users
+    http://localhost:9131/users
 done
 
 #echo "Populating the permissions module"
