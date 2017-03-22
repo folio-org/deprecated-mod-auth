@@ -33,6 +33,7 @@ import org.folio.rest.tools.messages.Messages;
 import org.folio.rest.tools.utils.OutStream;
 import org.folio.rest.tools.utils.TenantTool;
 import org.z3950.zing.cql.cql2pgjson.CQL2PgJSON;
+import org.z3950.zing.cql.cql2pgjson.FieldException;
 
 /**
  *
@@ -51,7 +52,7 @@ public class PermsAPI implements PermsResource {
   private final Logger logger = LoggerFactory.getLogger(PermsAPI.class);
   private static final String READ_PERMISSION_USERS_NAME = "perms.users.read";
 
-  private CQLWrapper getCQL(String query, int limit, int offset){
+  private CQLWrapper getCQL(String query, int limit, int offset) throws FieldException{
     CQL2PgJSON cql2pgJson = new CQL2PgJSON(TABLE_NAME_PERMS + ".jsonb");
     return new CQLWrapper(cql2pgJson, query).setLimit(new Limit(limit)).setOffset(new Offset(offset));
   }
@@ -65,7 +66,14 @@ public class PermsAPI implements PermsResource {
           throws Exception {
     try {
       vertxContext.runOnContext(v -> {
-        CQLWrapper cql = getCQL(query, length, start-1);
+        CQLWrapper cql;
+        try {
+          cql = getCQL(query, length, start-1);
+        } catch(Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(GetPermsUsersResponse.withPlainBadRequest(
+                          "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
+          return;
+        }
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_TENANT_HEADER));
         String[] fieldList = {"*"};
         if(!allowAccessByPermission(okapiHeaders.get(OKAPI_PERMISSIONS_HEADER), READ_PERMISSION_USERS_NAME)) {
@@ -680,13 +688,20 @@ public class PermsAPI implements PermsResource {
   }
 
   @Override
-  public void getPermsPermissions(int length, int start, String sortBy, String query,
+  public void getPermsPermissions(String expandSubs, int length, int start, String sortBy, String query,
           String memberOf, String ownedBy, Map<String, String> okapiHeaders,
           Handler<AsyncResult<Response>> asyncResultHandler, Context vertxContext)
           throws Exception {
     try {
       vertxContext.runOnContext(v -> {
-        CQLWrapper cql = getCQL(query, length, start-1);
+        CQLWrapper cql;
+        try {
+          cql = getCQL(query, length, start-1);
+        } catch(Exception e) {
+          asyncResultHandler.handle(Future.succeededFuture(GetPermsPermissionsResponse.withPlainBadRequest(
+                        "CQL Parsing Error for '" + query + "': " + e.getLocalizedMessage())));
+          return;
+        }
         String tenantId = TenantTool.calculateTenantId(okapiHeaders.get(OKAPI_TENANT_HEADER));
         String[] fieldList = {"*"};
         try {
@@ -695,9 +710,33 @@ public class PermsAPI implements PermsResource {
             if(getReply.succeeded()) {
               PermissionListObject permCollection = new PermissionListObject();
               List<Permission> permissions = (List<Permission>)getReply.result()[0];
-              permCollection.setPermissions(permissions);
-              permCollection.setTotalRecords(permissions.size());
-              asyncResultHandler.handle(Future.succeededFuture(GetPermsPermissionsResponse.withJsonOK(permCollection)));
+              List<Future> futureList = new ArrayList<>();
+              for(Permission permission : permissions) {
+                List<Object> subPermList = permission.getSubPermissions();
+                Future<Permission> permFuture;
+                if(expandSubs != null && expandSubs.equals("true")) { 
+                  permFuture = expandSubPermissions(permission, vertxContext, tenantId);
+                } else {
+                  permFuture = Future.succeededFuture(permission);
+                }
+                futureList.add(permFuture);
+              }
+              CompositeFuture compositeFuture = CompositeFuture.join(futureList);
+              compositeFuture.setHandler(compositeResult -> {
+                if(compositeFuture.failed()) {
+                  logger.debug("Error expanding permissions: " + compositeFuture.cause().getLocalizedMessage());
+                  asyncResultHandler.handle(Future.succeededFuture(GetPermsPermissionsResponse.withPlainInternalServerError(compositeResult.cause().getLocalizedMessage())));
+                } else {
+                  List<Permission> newPermList = new ArrayList<>();
+                  for(Future f : futureList) {
+                    newPermList.add((Permission)(f.result()));
+                  }
+                  permCollection.setPermissions(newPermList);
+                  permCollection.setTotalRecords(newPermList.size());
+                  asyncResultHandler.handle(Future.succeededFuture(GetPermsPermissionsResponse.withJsonOK(permCollection)));
+                }
+                
+              });        
             } else {
               logger.debug("Error with getReply: " + getReply.cause().getLocalizedMessage());
               asyncResultHandler.handle(Future.succeededFuture(GetPermsPermissionsResponse.withPlainInternalServerError(getReply.cause().getLocalizedMessage())));
@@ -835,8 +874,8 @@ public class PermsAPI implements PermsResource {
                 Permission permission = permList.get(0);
                 if(!permission.getSubPermissions().isEmpty()) {
                   List<Future> futureList = new ArrayList<Future>();
-                  for(String subPermissionName : permission.getSubPermissions()) {
-                    Future<List<String>> subPermFuture = getExpandedPermissions(subPermissionName, vertxContext, tenantId);
+                  for(Object subPermissionName : permission.getSubPermissions()) {
+                    Future<List<String>> subPermFuture = getExpandedPermissions((String)subPermissionName, vertxContext, tenantId);
                     futureList.add(subPermFuture);
                   }
                   CompositeFuture compositeFuture = CompositeFuture.all(futureList);
@@ -969,6 +1008,35 @@ public class PermsAPI implements PermsResource {
       return true;
     }
     return false;
+  }
+
+  private Future<Permission> expandSubPermissions(Permission permission, Context vertxContext, String tenantId) {
+    Future<Permission> future = Future.future();
+    List<Object> subPerms = permission.getSubPermissions();
+    if(subPerms.isEmpty()) {
+      future.complete(permission);
+    } else {
+      List<Object> newSubPerms = new ArrayList<>();
+      List<Future> futureList = new ArrayList<>();
+      for(Object o : subPerms) {
+        Future<Permission> subPermFuture = getFullPermissions((String)o, vertxContext, tenantId);
+        futureList.add(subPermFuture);
+      }
+      CompositeFuture compositeFuture = CompositeFuture.join(futureList);
+      compositeFuture.setHandler(compositeResult -> {
+        if(compositeResult.failed()) {
+          future.fail(compositeResult.cause().getLocalizedMessage());
+        } else {
+          for(Future f : futureList) {
+            newSubPerms.add(f.result());
+          }
+          permission.setSubPermissions(newSubPerms);
+          future.complete(permission);
+        }
+      });
+    }
+    
+    return future;
   }
 
 }
