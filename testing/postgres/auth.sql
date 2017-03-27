@@ -147,6 +147,10 @@ a856ccb7-d283-4a75-9278-d2a1438a4781	{"id" : "b122ad54-3a01-4a03-af7e-14f57fb77b
 17b8fb37-ea44-40e9-bfec-6fae074e4248	{"id" : "6302eaf3-394e-498c-93bd-8a7e90171d53","tags": [], "permissionName": "thing.read", "mutable" : false, "subPermissions": []}
 017cb6eb-20ac-4dc9-94a9-a8449feaed8b	{"id" : "5ef495c4-aaff-4816-b948-e0ac3985e78c","tags": [], "permissionName": "thing.see_sensitive", "mutable" : false, "subPermissions": []}
 b2bf661d-209c-43a9-8851-a025238065fc	{"id" : "2a23b100-0359-4459-9021-b0052c636bfa","tags": [], "permissionName": "thing.super", "mutable" : true, "subPermissions": ["thing.read", "thing.create", "thing.edit", "thing.delete", "thing.see_sensitive"]}
+5e61d34c-0bfd-48cc-b583-811575bba1a8	{"id" : "12f13449-d687-48f4-81f4-31fdc91f763f","tags": [], "permissionName": "users.read", "mutable" : false, "subPermissions": []}
+1cfd92db-30ad-43e3-8d2e-e5a0e8532130	{"id" : "6d04e6bf-1cde-4370-8fb4-6f7764468c61","tags": [], "permissionName": "users.create", "mutable" : false, "subPermissions": []}
+359c54d8-ddca-4c16-b7d3-877284e7ad8b	{"id" : "3b903874-cf92-4af0-96b5-bef7308b99bb","tags": [], "permissionName": "users.edit", "mutable" : false, "subPermissions": []}
+f19a8860-eeb5-497a-bd6e-13c53d565c05	{"id" : "fcdc162e-fbc9-4f9d-b0a0-848406b9672f","tags": [], "permissionName": "users.delete", "mutable" : false, "subPermissions": []}
 \.
 
 
@@ -158,7 +162,7 @@ COPY permissions_users (_id, jsonb) FROM stdin;
 49d17eb7-0ac0-4e67-9e21-41b0364b9f68	{"username": "jack", "permissions": ["thing.read"]}
 0a1fcb83-9806-4459-a601-ca75e9551460	{"username": "jill", "permissions": ["thing.read", "thing.see_sensitive", "thing.create", "thing.delete"]}
 6d8b21ea-6a34-4d73-8ab8-8c58f8e6c148	{"username": "joe", "permissions": []}
-5b5d6eb9-77e7-4589-879d-f25ae80a1b1f	{"username": "shane", "permissions": ["perms.users", "perms.permissions", "login"]}
+5b5d6eb9-77e7-4589-879d-f25ae80a1b1f	{"username": "shane", "permissions": ["perms.users", "perms.permissions", "login", "users.read", "users.create", "users.edit", "users.delete"]}
 \.
 
 
