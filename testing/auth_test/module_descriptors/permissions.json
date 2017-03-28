@@ -10,7 +10,7 @@
           "methods": [
             "POST"
           ],
-          "pathPattern": "/perms/users",
+          "pathPattern": "/perms/users*",
           "level": "30",
           "type": "request-response",
           "permissionsRequired": [
@@ -21,7 +21,7 @@
           "methods": [
             "GET"
           ],
-          "pathPattern": "/perms/users",
+          "pathPattern": "/perms/users*",
           "level": "30",
           "type": "request-response",
           "permissionsDesired": [
