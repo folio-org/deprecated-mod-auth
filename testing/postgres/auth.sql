@@ -151,6 +151,10 @@ b2bf661d-209c-43a9-8851-a025238065fc	{"id" : "2a23b100-0359-4459-9021-b0052c636b
 1cfd92db-30ad-43e3-8d2e-e5a0e8532130	{"id" : "6d04e6bf-1cde-4370-8fb4-6f7764468c61","tags": [], "permissionName": "users.create", "mutable" : false, "subPermissions": []}
 359c54d8-ddca-4c16-b7d3-877284e7ad8b	{"id" : "3b903874-cf92-4af0-96b5-bef7308b99bb","tags": [], "permissionName": "users.edit", "mutable" : false, "subPermissions": []}
 f19a8860-eeb5-497a-bd6e-13c53d565c05	{"id" : "fcdc162e-fbc9-4f9d-b0a0-848406b9672f","tags": [], "permissionName": "users.delete", "mutable" : false, "subPermissions": []}
+ce42fc6d-0e50-4932-a6f3-cedc24fd0f16	{"id" : "f99905ee-2ee2-4d60-9c2d-7c7f1e2e1373","tags": [], "permissionName": "usergroups.read", "mutable" : false, "subPermissions": []}
+c331cfbd-4866-4343-8812-2c9255eb5ec7	{"id" : "11d9fc45-5df0-4843-a53c-c0e25320f849","tags": [], "permissionName": "usergroups.create", "mutable" : false, "subPermissions" : []}
+6e73df5c-c6a8-46bc-aa91-86022deb1365	{"id" : "70df39dc-da72-4a32-ba00-dbbc597a8c8b","tags": [], "permissionName": "usergroups.edit", "mutable" : false, "subPermissions": []}
+f0b5da84-a8af-4b31-b7f7-eff315dd8f4b	{"id" : "86e010e9-bb73-413b-bdf3-3b795b4b5ede","tags": [], "permissionName": "usergroups.delete", "mutable" : false, "subPermissions" : []}
 \.
 
 
@@ -162,7 +166,7 @@ COPY permissions_users (_id, jsonb) FROM stdin;
 49d17eb7-0ac0-4e67-9e21-41b0364b9f68	{"username": "jack", "permissions": ["thing.read"]}
 0a1fcb83-9806-4459-a601-ca75e9551460	{"username": "jill", "permissions": ["thing.read", "thing.see_sensitive", "thing.create", "thing.delete"]}
 6d8b21ea-6a34-4d73-8ab8-8c58f8e6c148	{"username": "joe", "permissions": []}
-5b5d6eb9-77e7-4589-879d-f25ae80a1b1f	{"username": "shane", "permissions": ["perms.users", "perms.permissions", "login", "users.read", "users.create", "users.edit", "users.delete"]}
+5b5d6eb9-77e7-4589-879d-f25ae80a1b1f	{"username": "shane", "permissions": ["perms.users", "perms.permissions", "login", "users.read", "users.create", "users.edit", "users.delete", "usergroups.read", "usergroups.create", "usergroups.edit", "usergroups.delete"]}
 \.
 
 
