@@ -95,7 +95,7 @@
           "methods" : [ "POST", "DELETE" ],
           "pathPattern" : "/_/tenant"
         }
-      ] 
+      ]
     },
     {
       "id" : "_tenantPermissions",
