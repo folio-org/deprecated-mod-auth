@@ -18,7 +18,7 @@ schemas:
   - errors: !include ../../raml-util/schemas/errors.schema
   - error: !include ../../raml-util/schemas/error.schema
   - parameters: !include ../../raml-util/schemas/parameters.schema
-  
+
 traits:
   - validate: !include ../../raml-util/traits/validation.raml
   - pageable:
@@ -27,7 +27,7 @@ traits:
           description: "The maximum number of results to return."
           required: false
           type: integer
-          example: 0
+          example: 10
           minimum: 1
           default: 10
           maximum: 1000
