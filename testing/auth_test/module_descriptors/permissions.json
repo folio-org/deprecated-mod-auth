@@ -108,5 +108,48 @@
         }
       ]
     }
+  ],
+  "permissionSets" : [
+    {
+      "permissionName" : "perms.users.create",
+      "displayName" : "permission users create",
+      "description" : "Create permissions user"
+    },
+    {
+      "permissionName" : "perms.users.read",
+      "displayName" : "permission users read",
+      "description" : "Read permissions user data"
+    },
+    {
+      "permissionName" : "perms.users.modify",
+      "displayName" : "permission users modify",
+      "description" : "Modify permissions user data"
+    }, 
+    {
+      "permissionName" : "perms.users.delete",
+      "displayName" : "permission users delete",
+      "description" : "Remove permissions users"
+    }, 
+    {
+      "permissionName" : "perms.permissions.create",
+      "displayName" : "permission create",
+      "description" : "Create new permissions"
+    }, 
+    {
+      "permissionName" : "perms.permissions.read",
+      "displayName" : "permission read",
+      "description" : "Read permissions data"
+    }, 
+    {
+      "permissionName" : "perm.permissions.modify",
+      "displayName" : "permission modify",
+      "description" : "Modify permission data"
+    }, 
+    {
+      "permissionName" : "perm.permissions.delete",
+      "displayName" : "permission delete",
+      "description" : "Remove permissions"
+    }
+
   ]
 }
