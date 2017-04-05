@@ -146,8 +146,8 @@
       "description" : "Delete records from the User module"
     },
     {
-      "permissionName" : "usersgroups.read",
-      "displayName" : "usersgroups read",
+      "permissionName" : "usergroups.read",
+      "displayName" : "usergroups read",
       "description" : "Read the list of Groups for users"
     },
     {

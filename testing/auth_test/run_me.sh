@@ -19,6 +19,26 @@ curl -w '\n' -X POST -D - \
     -d @./tenants/diku.json \
     http://localhost:9130/_/proxy/tenants
 
+### Permissions module
+echo "Registering the Permissions module"
+curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -d @./module_descriptors/permissions.json \
+    http://localhost:9130/_/proxy/modules
+
+echo "Deploying the Permissions module"
+curl -w '\n' -D - -s \
+    -X POST \
+    -H "Content-type: application/json" \
+    -d @./deployment_descriptors/permissions.json \
+    http://localhost:9130/_/discovery/modules
+
+echo "Adding the Permissions module to our tenant"
+curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -d @./tenant_associations/permissions.json \
+    http://localhost:9130/_/proxy/tenants/diku/modules
+
 ### Users module
 echo "Registering the Users module"
 curl -w '\n' -X POST -D - \
@@ -40,28 +60,6 @@ curl -w '\n' -X POST -D - \
     -d @./tenant_associations/mod-users.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
-
-### Permissions module
-echo "Registering the Permissions module"
-curl -w '\n' -X POST -D - \
-    -H "Content-type: application/json" \
-    -d @./module_descriptors/permissions.json \
-    http://localhost:9130/_/proxy/modules
-
-echo "Deploying the Permissions module"
-curl -w '\n' -D - -s \
-    -X POST \
-    -H "Content-type: application/json" \
-    -d @./deployment_descriptors/permissions.json \
-    http://localhost:9130/_/discovery/modules
-
-echo "Adding the Permissions module to our tenant"
-curl -w '\n' -X POST -D - \
-    -H "Content-type: application/json" \
-    -d @./tenant_associations/permissions.json \
-    http://localhost:9130/_/proxy/tenants/diku/modules
-
-
 ### Login module
 echo "Registering the login module"
 curl -w '\n' -X POST -D - \
@@ -80,27 +78,6 @@ echo "Adding the login module to our tenant"
 curl -w '\n' -X POST -D - \
     -H "Content-type: application/json" \
     -d @./tenant_associations/login.json \
-    http://localhost:9130/_/proxy/tenants/diku/modules
-
-
-### authtoken module
-echo "Registering the authtoken module"
-curl -w '\n' -X POST -D - \
-    -H "Content-type: application/json" \
-    -d @./module_descriptors/authtoken.json \
-    http://localhost:9130/_/proxy/modules
-
-echo "Deploying the authtoken module"
-curl -w '\n' -D - -s \
-    -X POST \
-    -H "Content-type: application/json" \
-    -d @./deployment_descriptors/authtoken.json \
-    http://localhost:9130/_/discovery/modules
-
-echo "Adding the authtoken module to our tenant"
-curl -w '\n' -X POST -D - \
-    -H "Content-type: application/json" \
-    -d @./tenant_associations/authtoken.json \
     http://localhost:9130/_/proxy/tenants/diku/modules
 
 ### Thing module
@@ -151,29 +128,28 @@ do
     -H "Content-type: application/json" \
     -H "X-Okapi-Tenant: diku" \
     -d @$f \
-    http://localhost:9131/users
+    http://localhost:9130/users
 done
 
-#echo "Populating the permissions module"
-#for f in ./permissions/users/*
-#do
-#    echo processing $f
-#    curl -w '\n' -X POST -D - \
-#    -H "Content-type: application/json" \
-#    -H "X-Okapi-Tenant: diku" \
-#    -d @$f \
-#    http://localhost:9130/perms/users
-#done
-#
-#for f in ./permissions/permissions/*
-#do
-#    echo processing $f
-#    curl -w '\n' -X POST -D - \
-#    -H "Content-type: application/json" \
-#    -H "X-Okapi-Tenant: diku" \
-#    -d @$f \
-#    http://localhost:9130/perms/permissions
-#done
+### authtoken module
+echo "Registering the authtoken module"
+curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -d @./module_descriptors/authtoken.json \
+    http://localhost:9130/_/proxy/modules
+
+echo "Deploying the authtoken module"
+curl -w '\n' -D - -s \
+    -X POST \
+    -H "Content-type: application/json" \
+    -d @./deployment_descriptors/authtoken.json \
+    http://localhost:9130/_/discovery/modules
+
+echo "Adding the authtoken module to our tenant"
+curl -w '\n' -X POST -D - \
+    -H "Content-type: application/json" \
+    -d @./tenant_associations/authtoken.json \
+    http://localhost:9130/_/proxy/tenants/diku/modules
 
 echo "Okapi process id is $OKAPI_PID"
 #echo "Killing Okapi"
