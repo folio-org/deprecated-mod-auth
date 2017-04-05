@@ -4,91 +4,54 @@
   "provides": [
     {
       "id": "permissions",
-      "version": "0.0.1",
+      "version": "0.1",
       "handlers" : [
         {
-          "methods": [
-            "POST"
-          ],
+          "methods": [ "POST" ],
           "pathPattern": "/perms/users*",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.users.create"
-          ]
+          "permissionsRequired": [ "perms.users.item.post" ]
         },
         {
-          "methods": [
-            "GET"
-          ],
+          "methods": [ "GET" ],
           "pathPattern": "/perms/users*",
-          "level": "30",
-          "type": "request-response",
-          "permissionsDesired": [
-            "perms.users.read"
-          ]
+          "permissionsDesired": [ "perms.users.get" ]
         },
         {
-          "methods": [
-            "PUT"
-          ],
+          "methods": [ "PUT" ],
           "pathPattern": "/perms/users/{id}",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.users.modify"
-          ]
+          "permissionsRequired": [ "perms.users.item.put" ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/perms/users/{id}",
+          "permissionsRequired": [ "perms.users.item.delete" ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/perms/users/{id}/permissions/{perm}",
+          "permissionsRequired": [ "perms.users.item.delete" ]
         },
 
         {
-          "methods": [
-            "DELETE"
-          ],
-          "pathPattern": "/perms/users/{id}",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.users.delete"
-          ]
-        },
-        {
-          "methods": [
-            "GET"
-          ],
+          "methods": [ "GET" ],
           "pathPattern": "/perms/permissions",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.permissions.read"
-          ]
+          "permissionsRequired": [ "perms.permissions.get" ]
         },
         {
-          "methods": [
-            "POST"
-          ],
+          "methods": [ "POST" ],
           "pathPattern": "/perms/permissions",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.permissions.create"
-          ]
+          "permissionsRequired": [ "perms.permissions.item.post" ]
         },
         {
-          "methods": [
-            "DELETE"
-          ],
+          "methods": [ "DELETE" ],
           "pathPattern": "/perms/permissions/{id}",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.permissions.delete "
-          ]
+          "permissionsRequired": [ "perms.permissions.item.delete " ]
         }
       ]
     },
     {
       "id": "_tenant",
-      "version": "1.0.0",
+      "version": "1.0",
       "interfaceType" : "system",
       "handlers" : [
         {
@@ -99,7 +62,7 @@
     },
     {
       "id" : "_tenantPermissions",
-      "version" : "1.0.0",
+      "version" : "1.0",
       "interfaceType" : "system",
       "handlers" : [
         {
