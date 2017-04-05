@@ -4,102 +4,65 @@
   "provides": [
     {
       "id": "permissions",
-      "version": "0.0.1",
+      "version": "0.1",
       "handlers" : [
         {
-          "methods": [
-            "POST"
-          ],
+          "methods": [ "POST" ],
           "pathPattern": "/perms/users*",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.users.create"
-          ]
+          "permissionsRequired": [ "perms.users.item.post" ]
         },
         {
-          "methods": [
-            "GET"
-          ],
+          "methods": [ "GET" ],
           "pathPattern": "/perms/users*",
-          "level": "30",
-          "type": "request-response",
-          "permissionsDesired": [
-            "perms.users.read"
-          ]
+          "permissionsDesired": [ "perms.users.get" ]
         },
         {
-          "methods": [
-            "PUT"
-          ],
+          "methods": [ "PUT" ],
           "pathPattern": "/perms/users/{id}",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.users.modify"
-          ]
+          "permissionsRequired": [ "perms.users.item.put" ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/perms/users/{id}",
+          "permissionsRequired": [ "perms.users.item.delete" ]
+        },
+        {
+          "methods": [ "DELETE" ],
+          "pathPattern": "/perms/users/{id}/permissions/{perm}",
+          "permissionsRequired": [ "perms.users.item.delete" ]
         },
 
         {
-          "methods": [
-            "DELETE"
-          ],
-          "pathPattern": "/perms/users/{id}",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.users.delete"
-          ]
-        },
-        {
-          "methods": [
-            "GET"
-          ],
+          "methods": [ "GET" ],
           "pathPattern": "/perms/permissions",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.permissions.read"
-          ]
+          "permissionsRequired": [ "perms.permissions.get" ]
         },
         {
-          "methods": [
-            "POST"
-          ],
+          "methods": [ "POST" ],
           "pathPattern": "/perms/permissions",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.permissions.create"
-          ]
+          "permissionsRequired": [ "perms.permissions.item.post" ]
         },
         {
-          "methods": [
-            "DELETE"
-          ],
+          "methods": [ "DELETE" ],
           "pathPattern": "/perms/permissions/{id}",
-          "level": "30",
-          "type": "request-response",
-          "permissionsRequired": [
-            "perms.permissions.delete "
-          ]
+          "permissionsRequired": [ "perms.permissions.item.delete " ]
         }
       ]
     },
     {
       "id": "_tenant",
-      "version": "1.0.0",
+      "version": "1.0",
       "interfaceType" : "system",
       "handlers" : [
         {
           "methods" : [ "POST", "DELETE" ],
           "pathPattern" : "/_/tenant"
         }
-      ]
+      ] 
     },
     {
       "id" : "_tenantPermissions",
-      "version" : "1.0.0",
+      "version" : "1.0",
       "interfaceType" : "system",
       "handlers" : [
         {
@@ -111,45 +74,68 @@
   ],
   "permissionSets" : [
     {
-      "permissionName" : "perms.users.create",
-      "displayName" : "permission users create",
-      "description" : "Create permissions user"
-    },
-    {
-      "permissionName" : "perms.users.read",
+      "permissionName" : "perms.users.get",
       "displayName" : "permission users read",
-      "description" : "Read permissions user data"
+      "description" : "Read or list permissions user(s)"
     },
     {
-      "permissionName" : "perms.users.modify",
-      "displayName" : "permission users modify",
-      "description" : "Modify permissions user data"
+      "permissionName" : "perms.users.item.post",
+      "displayName" : "permission users item create",
+      "description" : "Add a new permissions user"
+    },
+    {
+      "permissionName" : "perms.users.item.put",
+      "displayName" : "permission users item modify",
+      "description" : "Modify a permissions user"
     }, 
     {
-      "permissionName" : "perms.users.delete",
-      "displayName" : "permission users delete",
-      "description" : "Remove permissions users"
+      "permissionName" : "perms.users.item.delete",
+      "displayName" : "permission users item delete",
+      "description" : "Remove a permissions user or remove permissions from a user"
     }, 
     {
-      "permissionName" : "perms.permissions.create",
-      "displayName" : "permission create",
-      "description" : "Create new permissions"
-    }, 
-    {
-      "permissionName" : "perms.permissions.read",
+      "permissionName" : "perms.permissions.get",
       "displayName" : "permission read",
-      "description" : "Read permissions data"
+      "description" : "Read or list permissions"
     }, 
     {
-      "permissionName" : "perm.permissions.modify",
-      "displayName" : "permission modify",
-      "description" : "Modify permission data"
+      "permissionName" : "perms.permissions.item.post",
+      "displayName" : "permission item create",
+      "description" : "Add a new permission"
     }, 
     {
-      "permissionName" : "perm.permissions.delete",
-      "displayName" : "permission delete",
-      "description" : "Remove permissions"
+      "permissionName" : "perms.permissions.item.put",
+      "displayName" : "permission item modify",
+      "description" : "Modify a permission"
+    }, 
+    {
+      "permissionName" : "perms.permissions.item.delete",
+      "displayName" : "permission item delete",
+      "description" : "Remove a permission"
+    },
+    {
+      "permissionName" : "perms.permissions",
+      "displayName" : "permissions",
+      "description" : "All permissions for permission objects",
+      "subPermissions" : [
+          "perms.permissions.get",
+          "perms.permissions.item.post",
+          "perms.permissions.item.put",
+          "perms.permissions.item.delete"
+      ]
+    },
+    {
+      "permissionName" : "perms.users",
+      "displayName" : "permission users",
+      "description" : "All permissions for permission user objects",
+      "subPermissions" : [
+        "perms.users.get",
+        "perms.users.item.post",
+        "perms.users.item.put",
+        "perms.users.item.delete"
+      ]
     }
 
   ]
+
 }

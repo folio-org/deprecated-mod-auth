@@ -9,15 +9,13 @@
         {
           "methods" : [ "*" ],
           "pathPattern" : "/*",
-          "level" : "10",
+          "phase" : "auth",
           "type" : "request-only",
-          "modulePermissions" : [ "perms.users.read" ]
+          "modulePermissions" : [ "perms.users.get" ]
         },
         {
           "methods" : [ "POST" ],
-          "pathPattern" : "/token",
-          "level" : "20",
-          "type" : "request-response"
+          "pathPattern" : "/token"
         }
       ]
     }
