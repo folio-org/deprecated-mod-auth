@@ -7,14 +7,14 @@
       "version": "0.1",
       "handlers" : [
         {
-          "methods": [ "POST" ],
-          "pathPattern": "/perms/users*",
-          "permissionsRequired": [ "perms.users.item.post" ]
-        },
-        {
           "methods": [ "GET" ],
           "pathPattern": "/perms/users*",
           "permissionsDesired": [ "perms.users.get" ]
+        },
+        {
+          "methods": [ "POST" ],
+          "pathPattern": "/perms/users*",
+          "permissionsRequired": [ "perms.users.item.post" ]
         },
         {
           "methods": [ "PUT" ],
