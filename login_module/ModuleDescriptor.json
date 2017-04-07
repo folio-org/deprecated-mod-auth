@@ -14,27 +14,27 @@
         {
           "methods" : [ "GET" ],
           "pathPattern" : "/authn/credentials",
-          "permissionsRequired" : [ "login.readUser" ]
+          "permissionsRequired" : [ "login.collection.get" ]
         },
         {
           "methods" : [ "GET" ],
           "pathPattern" : "/authn/credentials/{id}",
-          "permissionsRequired" : [ "login.readUser" ]
+          "permissionsRequired" : [ "login.item.get" ]
         },
         {
           "methods" : [ "POST" ],
           "pathPattern" : "/authn/credentials",
-          "permissionsRequired" : [ "login.addUser" ]
+          "permissionsRequired" : [ "login.item.post" ]
         },
         {
           "methods" : [ "PUT" ],
           "pathPattern" : "/authn/credentials",
-          "permissionsRequired" : [ "login.modifyUser" ]
+          "permissionsRequired" : [ "login.item.post" ]
         },
         {
           "methods" : [ "DELETE" ],
           "pathPattern" : "/authn/credentials",
-          "permissionsRequired" : [ "login.removeUser" ]
+          "permissionsRequired" : [ "login.item.delete" ]
         }
       ]
     },
@@ -47,39 +47,6 @@
           "methods" : [ "POST" ],
           "pathPattern" : "/_/tenant"
         }
-      ]
-    }
-  ],
-  "permissionSets" : [
-    {
-      "permissionName" : "login.readUser",
-      "displayName" : "login read user",
-      "description" : "Read Login Info"
-    },
-    {
-      "permissionName" : "login.addUser",
-      "displayName" : "login add user",
-      "description" : "Add New Login"
-    },
-    {
-      "permissionName" : "login.modifyUser",
-      "displayName" : "login modify user",
-      "description" : "Modify login info"
-    },
-    {
-      "permissionName" : "login.removeUser",
-      "displayName" : "login remove user",
-      "description" : "Remove existing login credentials"
-    },
-    {
-      "permissionName" : "login",
-      "displayName" : "login credentials",
-      "description" : "All permissions for login credentials",
-      "subPermissions" : [
-        "login.readUser",
-        "login.addUser",
-        "login.modifyUser",
-        "login.removeUser"
       ]
     }
   ]
