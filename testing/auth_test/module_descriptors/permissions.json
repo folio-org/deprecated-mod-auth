@@ -42,6 +42,7 @@
           "pathPattern": "/perms/permissions/{id}",
           "permissionsRequired": [ "perms.permissions.get" ]
         },
+
         {
           "methods" : [ "PUT" ],
           "pathPattern": "/perms/permissions/{id}",
