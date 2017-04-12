@@ -145,6 +145,15 @@
         "perms.users.item.put",
         "perms.users.item.delete"
       ]
+    },
+    {
+      "permissionName" : "perms.all",
+      "displayName" : "perms all",
+      "description" : "All permissions for the permissions module",
+      "subPermissions" : [
+        "perms.users",
+        "perms.permissions"
+      ]
     }
 
   ]
