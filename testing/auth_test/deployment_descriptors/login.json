@@ -2,6 +2,6 @@
   "srvcId": "login-module",
   "nodeId": "localhost",
   "descriptor": {
-    "exec": "java -jar ../../login_module/target/login-module-fat.jar -Dhttp.port=%p verify.user=true db_connection=/home/vagrant/mod-auth/testing/postgres/pg_options.json"
+    "exec": "java -jar ../../login_module/target/login-module-fat.jar -Dhttp.port=%p verify.user=true db_connection=/home/vagrant/mod-auth/testing/postgres/pg_options.json 2>&1"
   }
 }

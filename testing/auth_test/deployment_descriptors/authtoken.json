@@ -2,6 +2,6 @@
   "srvcId": "authtoken-module",
   "nodeId": "localhost",
   "descriptor": {
-    "exec": "java -jar -Dlog.level=debug -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dport=%p -Djwt.signing.key=CorrectBatteryHorseStaple -jar ../../authtoken_module/target/authtoken_module-fat.jar"
+    "exec": "java -jar -Dlog.level=debug -Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.SLF4JLogDelegateFactory -Dport=%p -Djwt.signing.key=CorrectBatteryHorseStaple -Dperm.lookup.timeout=25 ../../authtoken_module/target/authtoken_module-fat.jar"
   }
 }
